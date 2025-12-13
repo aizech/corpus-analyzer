@@ -1,0 +1,36 @@
+name: "✨ Feature request"
+description: "Suggest an idea or enhancement"
+title: "[Feature]: "
+labels:
+  - enhancement
+projects:
+  - aizech/2
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement!
+  - type: textarea
+    attributes:
+      label: "Problem statement"
+      description: "What problem are you trying to solve?"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: "Proposed solution"
+      description: "What would you like to see happen?"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: "Alternatives considered"
+      description: "Any alternative solutions or features you've considered."
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: "Additional context"
+      description: "Mockups, screenshots, references, etc."
+    validations:
+      required: false
