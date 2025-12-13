@@ -33,7 +33,7 @@ Your health is invaluable. With Corpus Analytica, discover a smarter, safer, and
 
 ## Live Demo
 
-Take a look at the live demo (if available) via your Streamlit deployment.
+Take a look at the live demo: [https://corpus-analyzer.streamlit.app/](https://corpus-analyzer.streamlit.app/)
 
 
 ## Features
