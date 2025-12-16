@@ -69,7 +69,15 @@ Before the request is made, the app asks you to confirm that your upload and tex
 ## Data retention
 
 - The app does not write your uploaded image to disk as part of analysis.
-- Any retention by third-party model providers depends on their policies and your account configuration.
+- We are using OpenAI models via the OpenAI API, OpenAI provides documentation about how API data is handled:
+- https://platform.openai.com/docs/guides/your-data
+
+In general, OpenAI states that:
+
+- API inputs/outputs are **not used to train** OpenAI models **by default** and we do NOT explicitly opt in, so your data is not used.
+- OpenAI retains certain request/response data for **abuse monitoring and safety** purposes for 30 days. Then all data is deleted completely.
+
+Always verify the current policy details in the official link above, since policies can change.
 
 ## Contact
 
