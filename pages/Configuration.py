@@ -51,7 +51,7 @@ def save_model_config(model_config):
 def load_model_config():
     model_config_file = os.path.join(os.path.dirname(__file__), "..", "model_config.json")
     default_config = {
-        "default_model": "gpt-4o"
+        "default_model": "gpt-5.2"
     }
     
     if os.path.exists(model_config_file):
@@ -76,11 +76,12 @@ def main():
         model_options = {
             "gpt-4o": "openai:gpt-4o",
             "gpt-4o-mini": "openai:gpt-4o-mini",
-            "gpt-5": "openai:gpt-5"
+            "gpt-5": "openai:gpt-5",
+            "gpt-5.2": "openai:gpt-5.2"
         }
         
         # Get current default model
-        current_default = model_config.get("default_model", "gpt-4o")
+        current_default = model_config.get("default_model", "gpt-5.2")
         
         # Model selection
         st.subheader("Default AI Model")

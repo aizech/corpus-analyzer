@@ -123,7 +123,7 @@ def create_medical_imaging_agent(
     return Agent(
         name="Medical Imaging and Search Expert",
         role="Specialized medical imaging radiologist for educational analysis",
-        model=OpenAIResponses(id="gpt-5"),
+        model=OpenAIResponses(id="gpt-5.2"),
         # Give the Agent the ability to update memories
         enable_agentic_memory=True,
         # OR - Run the MemoryManager automatically after each response
@@ -147,7 +147,7 @@ from agno.models.openai import OpenAIResponses
 agent = Agent(
     name="Medical Imaging and Search Expert",
     role="Specialized medical imaging radiologist for educational analysis",
-    model=OpenAIResponses(id="gpt-5"),  # Use GPT-4o for vision capabilities
+    model=OpenAIResponses(id="gpt-5.2"),  # Use GPT-4o for vision capabilities
     instructions=FULL_INSTRUCTIONS,
     tools=[{"type": "web_search_preview"}, PubmedTools()],  # Enable OpenAI tools for medical literature
     markdown=True,  # Enable markdown formatting for structured output

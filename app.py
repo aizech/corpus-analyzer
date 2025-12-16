@@ -35,6 +35,11 @@ pages = [
         icon=":material/diagnosis:"
     ),
     st.Page(
+        "pages/Security.py",
+        title="Security",
+        icon=":material/security:"
+    ),
+    st.Page(
         "pages/Feedback.py",
         title="Feedback",
         icon=":material/rate_review:"

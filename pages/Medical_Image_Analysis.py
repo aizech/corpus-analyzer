@@ -10,6 +10,75 @@ from config import config
 import datetime
 
 
+def load_default_model() -> str:
+    model_config_file = os.path.join(os.path.dirname(__file__), "..", "model_config.json")
+    if os.path.exists(model_config_file):
+        try:
+            import json
+
+            with open(model_config_file, "r") as f:
+                model_config = json.load(f)
+            default_model = model_config.get("default_model")
+            if isinstance(default_model, str) and default_model.strip():
+                return default_model.strip()
+        except Exception:
+            pass
+
+    return "gpt-5.2"
+
+
+def anonymize_dicom_dataset(ds: pydicom.dataset.Dataset) -> pydicom.dataset.Dataset:
+    anon = ds.copy()
+    try:
+        anon.remove_private_tags()
+    except Exception:
+        pass
+
+    # Common identifiers (non-exhaustive)
+    tags_to_clear = [
+        "PatientName",
+        "PatientID",
+        "PatientBirthDate",
+        "PatientSex",
+        "PatientAge",
+        "PatientAddress",
+        "PatientTelephoneNumbers",
+        "AccessionNumber",
+        "InstitutionName",
+        "InstitutionAddress",
+        "ReferringPhysicianName",
+        "PerformingPhysicianName",
+        "OperatorsName",
+        "StudyID",
+        "StudyDate",
+        "StudyTime",
+        "SeriesDate",
+        "SeriesTime",
+        "AcquisitionDate",
+        "AcquisitionTime",
+    ]
+
+    for tag_name in tags_to_clear:
+        if hasattr(anon, tag_name):
+            try:
+                setattr(anon, tag_name, "")
+            except Exception:
+                try:
+                    delattr(anon, tag_name)
+                except Exception:
+                    pass
+
+    # Remove potentially identifying sequences if present
+    for seq_name in ["OtherPatientIDsSequence", "ReferencedPatientSequence"]:
+        if hasattr(anon, seq_name):
+            try:
+                delattr(anon, seq_name)
+            except Exception:
+                pass
+
+    return anon
+
+
 # Set page config
 st.set_page_config(
     page_title=f"{config.APP_NAME} - Medical Image Analysis",
@@ -33,6 +102,12 @@ def main():
             "DISCLAIMER: This tool is for show cases and informational purposes only. "
             "All analyses should be reviewed by qualified healthcare professionals. "
             "Do not make medical decisions based solely on this analysis."
+        )
+
+        anonymize_dicom_locally = True
+        st.info(
+            "DICOM files are anonymized locally (common identifying tags cleared) before analysis. "
+            "This does not remove burned-in annotations in pixel data."
         )
 
     # Page title
@@ -72,8 +147,13 @@ def main():
                 try:
                     uploaded_file.seek(0)
                     dicom_data = pydicom.dcmread(uploaded_file)
+                    dicom_for_use = (
+                        anonymize_dicom_dataset(dicom_data)
+                        if anonymize_dicom_locally
+                        else dicom_data
+                    )
 
-                    img_array = dicom_data.pixel_array
+                    img_array = dicom_for_use.pixel_array
                     img_array = img_array / img_array.max() * 255
                     img_array = img_array.astype(np.uint8)
 
@@ -103,8 +183,21 @@ def main():
                 )
 
         with image_container:
+            st.warning(
+                "Anything visible in the image pixels and anything you type below may be sent to the AI provider. "
+                "Do not include patient-identifying information."
+            )
+
+            safe_to_send = st.checkbox(
+                "I confirm this upload and text contain no sensitive patient-identifying information",
+                value=False,
+            )
+
             analyze_button = st.button(
-                ":material/search: Analyze Image", type="primary", width="stretch"
+                ":material/search: Analyze Image",
+                type="primary",
+                width="stretch",
+                disabled=not safe_to_send,
             )
 
             if "additional_info" not in st.session_state:
@@ -182,32 +275,11 @@ def main():
 
         with analysis_container:
             if analyze_button:
-                image_path = "temp_medical_image.png"
-                # Save the resized image
-                resized_image.save(image_path, format="PNG")
-                
-                # Add DICOM metadata to additional info if available
-                if file_extension == 'dicom' or uploaded_file.type == 'application/dicom':
-                    try:
-                        uploaded_file.seek(0)
-                        dicom_data = pydicom.dcmread(uploaded_file)
-                        dicom_info = f"\n\nDICOM Metadata:\n"
-                        for tag in ['PatientID', 'PatientName', 'PatientAge', 'PatientSex', 'Modality', 'StudyDescription']:
-                            if hasattr(dicom_data, tag) and getattr(dicom_data, tag) != '':
-                                dicom_info += f"- {tag}: {getattr(dicom_data, tag)}\n"
-                        
-                        if additional_info:
-                            additional_info += dicom_info
-                        else:
-                            additional_info = dicom_info
-                    except Exception as e:
-                        st.warning(f"Could not extract DICOM metadata: {str(e)}")
-
                 with st.spinner(":material/cycle: Analyzing image... Please wait."):
                     try:
-                        # Read the image file as binary
-                        with open(image_path, "rb") as f:
-                            image_bytes = f.read()
+                        img_buf = io.BytesIO()
+                        resized_image.save(img_buf, format="PNG")
+                        image_bytes = img_buf.getvalue()
                         # creating an instance of Image
                         agno_image = AgnoImage(content=image_bytes, format="png")
 
@@ -220,7 +292,7 @@ def main():
                             + "\n\n"
                             + "Answer in the language of the user. If it is not given, answer English."
                         )
-                        model = "gpt-5"
+                        model = load_default_model()
                         response = agent.run(prompt, images=[agno_image], model=model)
                         st.markdown("### :material/diagnosis: Analysis Results")
                         st.markdown("---")
@@ -244,9 +316,6 @@ def main():
                             "Please try again or contact support if the issue persists."
                         )
                         print(f"Detailed error: {e}")
-                    finally:
-                        if os.path.exists(image_path):
-                            os.remove(image_path)
 
     else:
         st.info(":material/upload: Please upload a medical image to begin analysis")
