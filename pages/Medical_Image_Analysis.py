@@ -11,7 +11,9 @@ import datetime
 
 
 def load_default_model() -> str:
-    model_config_file = os.path.join(os.path.dirname(__file__), "..", "model_config.json")
+    model_config_file = os.path.join(
+        os.path.dirname(__file__), "..", "model_config.json"
+    )
     if os.path.exists(model_config_file):
         try:
             import json
@@ -87,10 +89,8 @@ st.set_page_config(
 )
 
 # Logo in sidebar
-st.logo(config.LOGO_TEXT_PATH,
-    size="large",
-    icon_image=config.LOGO_ICON_PATH
-)
+st.logo(config.LOGO_TEXT_PATH, size="large", icon_image=config.LOGO_ICON_PATH)
+
 
 def main():
     with st.sidebar:
@@ -116,13 +116,16 @@ def main():
         col1a, col2a = st.columns([1, 5])
 
         with col1a:
-            team_image = config.ASSETS_DIR / "godsinwhite_radiologist.png" 
+            team_image = config.ASSETS_DIR / "godsinwhite_radiologist.png"
             st.image(team_image, width=100)
         with col2a:
-            st.markdown("""
+            st.markdown(
+                """
             # Medical Imaging Diagnosis Agent  
             Upload a medical image for professional analysis
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
     # Create containers for better organization
     upload_container = st.container()
@@ -140,9 +143,12 @@ def main():
     if uploaded_file is not None:
         with image_container:
             # Check if file is DICOM or regular image
-            file_extension = uploaded_file.name.split('.')[-1].lower()
+            file_extension = uploaded_file.name.split(".")[-1].lower()
 
-            if file_extension in ['dicom', 'dcm'] or uploaded_file.type == 'application/dicom':
+            if (
+                file_extension in ["dicom", "dcm"]
+                or uploaded_file.type == "application/dicom"
+            ):
                 # Handle DICOM files
                 try:
                     uploaded_file.seek(0)
@@ -159,7 +165,7 @@ def main():
 
                     pil_image = PILImage.fromarray(img_array)
                     if len(img_array.shape) == 2:
-                        pil_image = pil_image.convert('RGB')
+                        pil_image = pil_image.convert("RGB")
                 except Exception as e:
                     st.error(f"Error processing DICOM file: {str(e)}")
                     st.stop()
@@ -243,7 +249,9 @@ def main():
                     width="stretch",
                     help="Replace the text field with this template",
                 ):
-                    st.session_state.additional_info = prompt_templates[selected_template]
+                    st.session_state.additional_info = prompt_templates[
+                        selected_template
+                    ]
                     st.rerun()
             with colp3:
                 if st.button(

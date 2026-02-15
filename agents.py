@@ -19,6 +19,7 @@ tmp_dir = cwd.joinpath("tmp")
 tmp_dir.mkdir(exist_ok=True, parents=True)
 
 import dotenv
+
 dotenv.load_dotenv(override=True)
 
 # Import and re-export the get_agent function from the agents package

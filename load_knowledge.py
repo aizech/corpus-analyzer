@@ -28,9 +28,7 @@ def load_knowledge(recreate: bool = False):
     with Progress(
         SpinnerColumn(), TextColumn("[bold blue]{task.description}"), console=console
     ) as progress:
-        task = progress.add_task(
-            "Loading HALO knowledge...", total=None
-        )
+        task = progress.add_task("Loading HALO knowledge...", total=None)
 
         try:
             # If recreate is True, try to clear the vector database first
@@ -38,7 +36,7 @@ def load_knowledge(recreate: bool = False):
                 console.print("[yellow]Recreating knowledge base...")
                 try:
                     # Try to reset the vector database
-                    if hasattr(halo_knowledge, 'reset_vector_db'):
+                    if hasattr(halo_knowledge, "reset_vector_db"):
                         halo_knowledge.reset_vector_db()
                     # Delete all files in the knowledge directory
                     knowledge_dir = halo_knowledge.knowledge_dir
@@ -50,7 +48,7 @@ def load_knowledge(recreate: bool = False):
             else:
                 # Just get the knowledge directory
                 knowledge_dir = halo_knowledge.knowledge_dir
-            
+
             # Add a sample document if no documents exist or recreate is True
             if recreate or not any(knowledge_dir.glob("*.*")):
                 console.print("Adding sample knowledge document...")
@@ -80,9 +78,11 @@ agents based on their capabilities. The system includes:
 4. A team coordination mechanism for managing agent interactions
                 """
                 # Write the file first
-                with open(knowledge_dir / "halo_overview.md", "w", encoding="utf-8") as f:
+                with open(
+                    knowledge_dir / "halo_overview.md", "w", encoding="utf-8"
+                ) as f:
                     f.write(sample_content)
-                
+
                 console.print("Sample document created successfully")
 
             # Load the knowledge base with proper error handling
@@ -90,7 +90,7 @@ agents based on their capabilities. The system includes:
             # Force recreate if we're explicitly asked to
             halo_knowledge.load(recreate=recreate)
             progress.update(task, completed=True)
-            
+
         except ValueError as ve:
             if "Field 'vector' not found in target schema" in str(ve):
                 console.print("[red]Schema mismatch detected. Attempting to fix...")
@@ -99,23 +99,27 @@ agents based on their capabilities. The system includes:
                     # Find and remove the LanceDB database files
                     import shutil
                     import os
-                    
+
                     # Common locations for LanceDB files
                     possible_db_paths = [
                         Path.home() / "halo_knowledge",
                         Path.cwd() / "halo_knowledge",
-                        Path(os.environ.get("USERPROFILE", "")) / "halo_knowledge"
+                        Path(os.environ.get("USERPROFILE", "")) / "halo_knowledge",
                     ]
-                    
+
                     for db_path in possible_db_paths:
                         if db_path.exists():
-                            console.print(f"[yellow]Removing database directory: {db_path}")
+                            console.print(
+                                f"[yellow]Removing database directory: {db_path}"
+                            )
                             try:
                                 shutil.rmtree(db_path)
                                 console.print(f"[green]Successfully removed {db_path}")
                             except Exception as rm_err:
-                                console.print(f"[red]Failed to remove {db_path}: {rm_err}")
-                    
+                                console.print(
+                                    f"[red]Failed to remove {db_path}: {rm_err}"
+                                )
+
                     # Now try loading again with recreate=True
                     console.print("[yellow]Attempting to reload knowledge base...")
                     halo_knowledge.load(recreate=True)
@@ -142,11 +146,15 @@ agents based on their capabilities. The system includes:
 
 if __name__ == "__main__":
     import argparse
-    
+
     # Parse command-line arguments
-    parser = argparse.ArgumentParser(description="Load the Halo Agent Interface knowledge base")
-    parser.add_argument("--recreate", action="store_true", help="Recreate the knowledge base")
+    parser = argparse.ArgumentParser(
+        description="Load the Halo Agent Interface knowledge base"
+    )
+    parser.add_argument(
+        "--recreate", action="store_true", help="Recreate the knowledge base"
+    )
     args = parser.parse_args()
-    
+
     # Load the knowledge base with the specified options
     load_knowledge(recreate=args.recreate)
