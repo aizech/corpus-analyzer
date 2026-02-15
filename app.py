@@ -5,7 +5,8 @@ import datetime
 import os
 from config import config
 from dotenv import load_dotenv
-#from langfuse import get_client
+
+# from langfuse import get_client
 
 load_dotenv(override=True)
 
@@ -16,12 +17,12 @@ st.set_page_config(
     menu_items=config.MENU_ITEMS,
 )
 
-#langfuse = get_client()
+# langfuse = get_client()
 
 # Verify connection
-#if langfuse.auth_check():
+# if langfuse.auth_check():
 #    print("Langfuse client is authenticated and ready!")
-#else:
+# else:
 #    print("Authentication failed. Please check your credentials and host.")
 
 
@@ -32,28 +33,18 @@ pages = [
     st.Page(
         "pages/Medical_Image_Analysis.py",
         title="Medical Image Analysis",
-        icon=":material/diagnosis:"
+        icon=":material/diagnosis:",
     ),
+    st.Page("pages/Security.py", title="Security", icon=":material/security:"),
+    st.Page("pages/Feedback.py", title="Feedback", icon=":material/rate_review:"),
     st.Page(
-        "pages/Security.py",
-        title="Security",
-        icon=":material/security:"
-    ),
-    st.Page(
-        "pages/Feedback.py",
-        title="Feedback",
-        icon=":material/rate_review:"
-    ),
-    st.Page(
-        "pages/Configuration.py",
-        title="Configuration",
-        icon=":material/settings:"
+        "pages/Configuration.py", title="Configuration", icon=":material/settings:"
     ),
     st.Page(
         "pages/About.py",
         title="About",
-        #icon=":material/widgets:"
-        icon=":material/info:"
+        # icon=":material/widgets:"
+        icon=":material/info:",
     ),
 ]
 
@@ -61,7 +52,7 @@ page = st.navigation(pages)
 page.run()
 
 
-#with st.sidebar.container(height=310):
+# with st.sidebar.container(height=310):
 #    if page.title == "Home":
 #        pass
 #    elif page.title == "About":
@@ -70,4 +61,6 @@ page.run()
 #        pass
 
 st.sidebar.markdown(" ")
-st.sidebar.caption(f"©  {datetime.date.today().year} | Made with :material/favorite: by [{config.COMPANY}]({config.COMPANY_URL})")
+st.sidebar.caption(
+    f"©  {datetime.date.today().year} | Made with :material/favorite: by [{config.COMPANY}]({config.COMPANY_URL})"
+)

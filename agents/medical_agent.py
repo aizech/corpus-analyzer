@@ -7,6 +7,7 @@ The agent can analyze various types of medical images (X-ray, MRI, CT, Ultrasoun
 detailed professional analysis along with patient-friendly explanations.
 
 """
+
 from pathlib import Path
 
 import sys
@@ -18,17 +19,19 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 # Windows-specific asyncio policy for compatibility
-if sys.platform == 'win32':
+if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 from agno.agent import Agent
 from agno.knowledge.knowledge import Knowledge
 from agno.memory import MemoryManager
 from agno.models.base import Model
-#from agno.tools.searxng import Searxng
+
+# from agno.tools.searxng import Searxng
 from agno.tools.pubmed import PubmedTools
-#from agno.tools.openai import OpenAITools
-#from copy import deepcopy
+
+# from agno.tools.openai import OpenAITools
+# from copy import deepcopy
 
 # Base prompt that defines the agent's expertise and response structure
 BASE_PROMPT = """You are a highly skilled medical imaging expert and radiologist with extensive knowledge in diagnostic imaging. 
@@ -103,23 +106,24 @@ FULL_INSTRUCTIONS = BASE_PROMPT + ANALYSIS_TEMPLATE
 from agno.models.base import Model
 from agno.models.openai import OpenAIResponses
 
+
 def create_medical_imaging_agent(
     model: Model, memory: MemoryManager, knowledge: Knowledge
 ) -> Agent:
     """
     Create a medical imaging agent that can analyze various types of medical images.
-    
+
     Args:
         model: The model to use for the agent
         memory: The memory to use for the agent
         knowledge: The knowledge to use for the agent
-        
+
     Returns:
         An Agent instance configured as a medical imaging expert agent
     """
     # Create a copy of the model to avoid side effects of the model being modified
-    #model_copy = deepcopy(model)
-    
+    # model_copy = deepcopy(model)
+
     return Agent(
         name="Medical Imaging and Search Expert",
         role="Specialized medical imaging radiologist for educational analysis",
@@ -130,31 +134,39 @@ def create_medical_imaging_agent(
         enable_user_memories=True,
         knowledge=knowledge,
         instructions=FULL_INSTRUCTIONS,
-        tools=[{"type": "web_search_preview"}, PubmedTools()],  # Enable OpenAI tools for medical literature
+        tools=[
+            {"type": "web_search_preview"},
+            PubmedTools(),
+        ],  # Enable OpenAI tools for medical literature
         description="You are a highly skilled medical imaging expert with extensive knowledge in radiology and diagnostic imaging.",
         markdown=True,  # Enable markdown formatting for structured output
         debug_mode=True,
-        #show_tool_calls=True,
+        # show_tool_calls=True,
         exponential_backoff=True,
-        #add_datetime_to_instructions=True,
-        #add_history_to_messages=True,
-        add_history_to_context=True
+        # add_datetime_to_instructions=True,
+        # add_history_to_messages=True,
+        add_history_to_context=True,
     )
+
 
 # Create default agent instance for backward compatibility
 # Note: This is deprecated - use create_medical_imaging_agent() factory function instead
 from agno.models.openai import OpenAIResponses
+
 agent = Agent(
     name="Medical Imaging and Search Expert",
     role="Specialized medical imaging radiologist for educational analysis",
     model=OpenAIResponses(id="gpt-5.2"),  # Use GPT-4o for vision capabilities
     instructions=FULL_INSTRUCTIONS,
-    tools=[{"type": "web_search_preview"}, PubmedTools()],  # Enable OpenAI tools for medical literature
+    tools=[
+        {"type": "web_search_preview"},
+        PubmedTools(),
+    ],  # Enable OpenAI tools for medical literature
     markdown=True,  # Enable markdown formatting for structured output
     debug_mode=True,
-    #show_tool_calls=True,
+    # show_tool_calls=True,
     exponential_backoff=True,
-    #add_datetime_to_instructions=True
+    # add_datetime_to_instructions=True
 )
 
 # Example usage

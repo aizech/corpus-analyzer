@@ -2,7 +2,6 @@ import streamlit as st
 
 from config import config
 
-
 # Page config
 st.set_page_config(
     page_title=f"{config.APP_NAME} - Security",
@@ -34,8 +33,7 @@ with one_cola:
             unsafe_allow_html=True,
         )
 
-st.markdown(
-    """
+st.markdown("""
 ## Summary
 
 This page explains how Corpus Analyzer handles your inputs and what you can do to use the app safely.
@@ -84,5 +82,4 @@ Always verify the current policy details in the official link above, since polic
 If you have security questions or want to report a vulnerability, contact:
 
 - **Email**: `support@corpusanalytica.com`
-"""
-)
+""")

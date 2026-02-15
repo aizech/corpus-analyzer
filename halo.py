@@ -9,9 +9,10 @@ from agno.agent import Agent
 from agno.knowledge.embedder.openai import OpenAIEmbedder
 from agno.memory import MemoryManager
 from agno.db.sqlite import SqliteDb
-#from agno.models.anthropic import Claude
-#from agno.models.google import Gemini
-#from agno.models.groq import Groq
+
+# from agno.models.anthropic import Claude
+# from agno.models.google import Gemini
+# from agno.models.groq import Groq
 from agno.models.openai import OpenAIChat
 from agno.team import Team
 from agno.tools import Toolkit
@@ -23,7 +24,6 @@ from tools import get_toolkit
 from config import config
 import base64
 import json
-
 
 cwd = Path(__file__).parent.resolve()
 tmp_dir = cwd.joinpath("tmp")
@@ -49,9 +49,9 @@ class HaloConfig:
 halo_memory = MemoryManager(
     db=SqliteDb(db_file=str(MEMORY_PATH)),
     # Select the model used for memory creation and updates. If unset, the default model of the Agent is used.
-    #model=OpenAIChat(id="gpt-5-mini"),
+    # model=OpenAIChat(id="gpt-5-mini"),
     # You can also provide additional instructions for memory management
-    additional_instructions="Store important user information and preferences to personalize interactions"
+    additional_instructions="Store important user information and preferences to personalize interactions",
 )
 
 # Setup sessions storage database
@@ -75,43 +75,57 @@ except Exception as e:
         # Create a new LanceDb instance with schema definition
         from lancedb import connect
         import pyarrow as pa
-        
+
         # Create a connection to the database
         logger.info(f"Creating new LanceDB connection to {KNOWLEDGE_PATH}")
         connection = connect(str(KNOWLEDGE_PATH))
-        
+
         # Define schema for the table to match agno's LanceDB implementation
-        schema = pa.schema([
-            pa.field('vector', pa.list_(pa.float32(), 1536)),  # Vector field for embeddings
-            pa.field('id', pa.string()),  # Document ID
-            pa.field('payload', pa.string()),  # JSON string containing name, meta_data, content, usage
-        ])
-        
+        schema = pa.schema(
+            [
+                pa.field(
+                    "vector", pa.list_(pa.float32(), 1536)
+                ),  # Vector field for embeddings
+                pa.field("id", pa.string()),  # Document ID
+                pa.field(
+                    "payload", pa.string()
+                ),  # JSON string containing name, meta_data, content, usage
+            ]
+        )
+
         # Create an empty table if it doesn't exist
         if "halo_knowledge" not in connection.table_names():
             logger.info("Creating new 'halo_knowledge' table with schema")
             # Create empty DataFrame with the schema
             import pandas as pd
             import numpy as np
-            
+
             # Create a single empty row to initialize the table
-            empty_df = pd.DataFrame({
-                'vector': [np.zeros(1536, dtype=np.float32)],  # Vector field for embeddings
-                'id': ['init'],
-                'payload': [json.dumps({
-                    'name': 'initialization',
-                    'meta_data': {},
-                    'content': 'initialization',
-                    'usage': {}
-                })]
-            })
-            
+            empty_df = pd.DataFrame(
+                {
+                    "vector": [
+                        np.zeros(1536, dtype=np.float32)
+                    ],  # Vector field for embeddings
+                    "id": ["init"],
+                    "payload": [
+                        json.dumps(
+                            {
+                                "name": "initialization",
+                                "meta_data": {},
+                                "content": "initialization",
+                                "usage": {},
+                            }
+                        )
+                    ],
+                }
+            )
+
             # Create the table
             connection.create_table("halo_knowledge", data=empty_df)
             logger.info("Successfully created new 'halo_knowledge' table")
         else:
             logger.info("Table 'halo_knowledge' already exists in the database")
-        
+
         # Initialize Knowledge with the new table
         halo_knowledge = HaloKnowledge(
             vector_db=LanceDb(
@@ -126,8 +140,9 @@ except Exception as e:
         logger.error(f"Failed to create LanceDB table: {inner_e}")
         # Create a fallback by recreating the database directory
         import shutil
+
         logger.warning("Attempting to recreate the database directory as fallback")
-        
+
         # Backup the existing directory if it exists
         if KNOWLEDGE_PATH.exists():
             backup_path = KNOWLEDGE_PATH.with_name(f"{KNOWLEDGE_PATH.name}_backup")
@@ -135,48 +150,61 @@ except Exception as e:
             if backup_path.exists():
                 shutil.rmtree(backup_path)
             shutil.copytree(KNOWLEDGE_PATH, backup_path)
-            
+
             # Remove the existing directory
             logger.info(f"Removing existing database at {KNOWLEDGE_PATH}")
             shutil.rmtree(KNOWLEDGE_PATH)
-        
+
         # Create a fresh directory
         KNOWLEDGE_PATH.mkdir(exist_ok=True, parents=True)
-        
+
         # Try one more time with a fresh database
         try:
             from lancedb import connect
             import pandas as pd
             import numpy as np
-            
+
             # Create a connection to the fresh database
             logger.info(f"Creating fresh LanceDB connection to {KNOWLEDGE_PATH}")
             connection = connect(str(KNOWLEDGE_PATH))
-            
-            # Create a single empty row to initialize the table with correct schema
-            empty_df = pd.DataFrame({
-                'vector': [np.zeros(1536, dtype=np.float32)],  # Vector field for embeddings
-                'id': ['init'],
-                'payload': [json.dumps({
-                    'name': 'initialization',
-                    'meta_data': {},
-                    'content': 'initialization',
-                    'usage': {}
-                })]
 
-            })
-            
+            # Create a single empty row to initialize the table with correct schema
+            empty_df = pd.DataFrame(
+                {
+                    "vector": [
+                        np.zeros(1536, dtype=np.float32)
+                    ],  # Vector field for embeddings
+                    "id": ["init"],
+                    "payload": [
+                        json.dumps(
+                            {
+                                "name": "initialization",
+                                "meta_data": {},
+                                "content": "initialization",
+                                "usage": {},
+                            }
+                        )
+                    ],
+                }
+            )
+
             # Define schema for the table
-            schema = pa.schema([
-                pa.field('vector', pa.list_(pa.float32(), 1536)),  # Vector field for embeddings
-                pa.field('id', pa.string()),  # Document ID
-                pa.field('payload', pa.string()),  # JSON string containing name, meta_data, content, usage
-            ])
-            
+            schema = pa.schema(
+                [
+                    pa.field(
+                        "vector", pa.list_(pa.float32(), 1536)
+                    ),  # Vector field for embeddings
+                    pa.field("id", pa.string()),  # Document ID
+                    pa.field(
+                        "payload", pa.string()
+                    ),  # JSON string containing name, meta_data, content, usage
+                ]
+            )
+
             # Create the table with explicit schema
             connection.create_table("halo_knowledge", data=empty_df, schema=schema)
             logger.info("Successfully created fresh 'halo_knowledge' table")
-            
+
             # Initialize Knowledge with the new table
             halo_knowledge = HaloKnowledge(
                 vector_db=LanceDb(
@@ -191,26 +219,27 @@ except Exception as e:
             logger.error(f"All attempts to create LanceDB failed: {final_e}")
             # Create a mock HaloKnowledge as absolute fallback
             logger.warning("Creating mock HaloKnowledge instance as final fallback")
-            
+
             # Create a minimal mock class that implements the required interface
             class MockKnowledge:
                 def search(self, *args, **kwargs):
                     return []
-                    
+
                 def add(self, *args, **kwargs):
                     logger.warning("Mock knowledge base cannot store data")
                     return True
-                    
+
                 def delete(self, *args, **kwargs):
                     return True
-            
+
             halo_knowledge = MockKnowledge()
 
-# Function to show bot 
+
+# Function to show bot
 def show_scotty(show=True):
     if not show:
         return
-    
+
     # Function to encode the image
     def get_image_base64(image_path):
         with open(image_path, "rb") as img_file:
@@ -222,7 +251,8 @@ def show_scotty(show=True):
     # Get base64 encoded image
     img_base64 = get_image_base64(image_path)
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
         <style>
         .fixed-image {{
             position: fixed;
@@ -234,9 +264,10 @@ def show_scotty(show=True):
         <div class="fixed-image">
             <img src="data:image/png;base64,{img_base64}" width="100">
         </div>
-        """, unsafe_allow_html=True
+        """,
+        unsafe_allow_html=True,
     )
-    
+
     # Function to encode the image
     def get_image_base64(image_path):
         with open(image_path, "rb") as img_file:
@@ -248,7 +279,8 @@ def show_scotty(show=True):
     # Get base64 encoded image
     img_base64 = get_image_base64(image_path)
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
         <style>
         .fixed-image {{
             position: fixed;
@@ -260,7 +292,8 @@ def show_scotty(show=True):
         <div class="fixed-image">
             <img src="data:image/png;base64,{img_base64}" width="100">
         </div>
-        """, unsafe_allow_html=True
+        """,
+        unsafe_allow_html=True,
     )
 
 
@@ -294,10 +327,10 @@ def create_halo(
 
     # Default tools that should always be available
     default_tools = []
-    
+
     # Combine default tools with user-selected tools, removing duplicates
     all_tools = list(set((config.tools or []) + default_tools))
-    
+
     tools: List[Toolkit] = [ReasoningTools(add_instructions=True)]
     for tool_name in all_tools:
         tool = get_toolkit(tool_name)
@@ -309,7 +342,9 @@ def create_halo(
     agents: List[Agent] = []
     if config.agents:
         for agent_name in config.agents:
-            agent = get_agent(agent_name, model, halo_memory, halo_knowledge, debug_mode=debug_mode)
+            agent = get_agent(
+                agent_name, model, halo_memory, halo_knowledge, debug_mode=debug_mode
+            )
             if agent is not None:
                 agents.append(agent)
             else:
@@ -364,9 +399,9 @@ def create_halo(
         respond_directly=True,  # Team can respond directly without always delegating
         delegate_task_to_all_members=False,  # Don't automatically delegate to all members
         determine_input_for_members=True,  # Team determines what input each member gets
-        #enable_team_history=True,
+        # enable_team_history=True,
         read_team_history=True,
-        #num_of_interactions_from_history=3,
+        # num_of_interactions_from_history=3,
         show_members_responses=True,
         enable_user_memories=True,  # This enables memory functionality
         markdown=True,

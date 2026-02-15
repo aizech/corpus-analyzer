@@ -17,23 +17,23 @@ def create_pubmed_agent(
 ) -> Agent:
     """
     Create a pubmed agent that can search for and synthesize information.
-    
+
     Args:
         model: The model to use for the agent
         memory: The memory to use for the agent
         knowledge: The knowledge to use for the agent
-        
+
     Returns:
         An Agent instance configured as a pubmed agent
     """
     # Create a copy of the model to avoid side effects of the model being modified
     model_copy = deepcopy(model)
-    
+
     return Agent(
         name="Pubmed",
         role="You are a medical research assistant AI agent. Your primary responsibility is to answer medical and scientific questions by searching, retrieving, and synthesizing information from the PubMed database. Your responses must be grounded in up-to-date, peer-reviewed scientific literature and should be clear, concise, and suitable for both healthcare professionals and informed laypersons.",
         model=model_copy,
-        #memory=memory,
+        # memory=memory,
         # Give the Agent the ability to update memories
         enable_agentic_memory=True,
         # OR - Run the MemoryManager automatically after each response
@@ -42,7 +42,7 @@ def create_pubmed_agent(
         tools=[PubmedTools()],
         description="You are a medical assistant that will give detailed answers based on real scientific research. For every user question, search PubMed for the most relevant and recent articles. Summarize the findings, cite the sources, and explain the evidence in clear, accessible language. If the evidence is inconclusive or limited, state this clearly. Do not provide personal medical advice or diagnosis.",
         instructions=[
-            "Use the PubMed tool to search for and retrieve relevant scientific articles and abstracts when responding to queries.", 
+            "Use the PubMed tool to search for and retrieve relevant scientific articles and abstracts when responding to queries.",
             "Prioritize the most recent and high-quality evidence, such as systematic reviews, meta-analyses, and clinical guidelines, unless otherwise specified by the user.",
             "MANDATORY: First, display the raw PubMed tool output in a code block to show what data is available.",
             "CRITICAL: Examine the PubMed tool response for ANY of these PMID indicators:",
@@ -63,6 +63,6 @@ def create_pubmed_agent(
             "If a direct answer is not available, provide the best evidence-based synthesis and indicate any limitations or gaps in the literature.",
             "Do not provide medical advice or diagnosis; instead, present scientific information to support informed decision-making.",
             "ALWAYS end with a '## References' section with ALL papers linked to PubMed in some way.",
-            "Respect user privacy and confidentiality at all times."
+            "Respect user privacy and confidentiality at all times.",
         ],
     )
