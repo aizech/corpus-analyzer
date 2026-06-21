@@ -485,9 +485,7 @@ async def show_user_memories(halo_team, user_id: str) -> None:
                                                                         rows_affected
                                                                         > 0
                                                                     ):
-                                                                        deleted_count += (
-                                                                            1
-                                                                        )
+                                                                        deleted_count += 1
                                                                         deleted = True
                                                                         logger.info(
                                                                             f"Successfully deleted memory {memory_id} from table {table_name}"
