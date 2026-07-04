@@ -1,39 +1,16 @@
 import streamlit as st
 
-from config import config
+from ui import render_page_header
 
-# Page config
-st.set_page_config(
-    page_title=f"{config.APP_NAME} - Security",
-    page_icon=":material/security:",
-    layout="wide",
-    menu_items=config.MENU_ITEMS,
-)
 
-# Logo in sidebar
-st.logo(
-    config.LOGO_TEXT_PATH,
-    size="large",
-    icon_image=config.LOGO_ICON_PATH,
-)
+def main():
+    render_page_header(
+        "Security",
+        subtitle="Security & Privacy",
+        page_icon="material/security",
+    )
 
-# Page title
-one_cola = st.columns([1])[0]
-with one_cola:
-    col1a, col2a = st.columns([1, 5])
-
-    with col1a:
-        st.image(config.LOGO_TEAM_PATH, width=100)
-    with col2a:
-        st.markdown(
-            """
-        # Corpus Analyzer 
-        ## Security & Privacy
-        """,
-            unsafe_allow_html=True,
-        )
-
-st.markdown("""
+    st.markdown("""
 ## Summary
 
 This page explains how Corpus Analyzer handles your inputs and what you can do to use the app safely.
@@ -83,3 +60,6 @@ If you have security questions or want to report a vulnerability, contact:
 
 - **Email**: `support@corpusanalytica.com`
 """)
+
+
+main()

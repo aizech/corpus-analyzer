@@ -119,22 +119,26 @@ GITHUB_REPO_URL=https://github.com/aizech/corpus-analyzer
 
 ```
 corpus-analyzer/
-├── app.py                    # Main Streamlit application
-├── pages/
+├── app.py                    # Main Streamlit application with page navigation
+├── views/
 │   ├── Medical_Image_Analysis.py  # Medical imaging interface
-│   ├── Configuration.py          # System settings
-│   ├── Feedback.py               # User ratings + feedback
+│   ├── Configuration.py          # Model and API key settings
+│   ├── Feedback.py               # User ratings and feedback
+│   ├── Security.py               # Security and privacy information
 │   └── About.py                  # Platform information
 ├── agents/
-│   └── medical_agent.py          # Medical imaging expert
-├── tools/                        # Custom tool implementations
+│   ├── medical_agent.py          # Medical imaging agent factory
+│   └── medical_agent_prompt.md   # Agent prompt loaded at runtime
 ├── assets/                       # Static assets and images
-├── halo.py                       # HALO Agent Interface
-├── knowledge.py                  # Knowledge base integration
-├── config.py                     # Application configuration
-├── utils.py                      # Utility functions
-├── knowledge_docs/               # Knowledge base documents
-└── requirements.txt              # Python dependencies
+├── config.py                     # Application constants
+├── dicom_utils.py                # DICOM anonymization helpers
+├── export.py                     # PDF / Markdown report generation
+├── models.py                     # Model configuration and selection
+├── ui.py                         # Shared Streamlit UI components
+├── utils.py                      # General utility functions
+├── tests/                        # pytest test suite
+├── requirements.txt              # Python dependencies
+└── pyproject.toml                # Project metadata and ruff config
 ```
 
 ### Technical Stack
@@ -143,9 +147,10 @@ corpus-analyzer/
 |-----------|------------|---------|
 | **Framework** | [Agno](https://github.com/agno-agi/agno) | AI agent orchestration |
 | **Frontend** | [Streamlit](https://streamlit.io/) | Web interface |
-| **AI Models** | OpenAI GPT (GPT-4o, GPT-4o-mini) | Medical inference |
-| **Vector DB** | [LanceDB](https://lancedb.com/) | Knowledge retrieval |
-| **Storage** | SQLite | Session and memory persistence |
+| **AI Models** | OpenAI GPT (GPT-4o, GPT-5.4-mini, etc.) | Medical inference |
+| **Image Processing** | Pillow, pydicom | DICOM and image handling |
+| **Export** | fpdf2, markdown | PDF and Markdown reports |
+| **Testing** | pytest, ruff | Code quality and regression tests |
 
 ---
 

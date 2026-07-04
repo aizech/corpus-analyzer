@@ -1,50 +1,18 @@
-"""
-About Page
-This page provides information about the Corpus Analyzer application.
-"""
+"""About page for Corpus Analyzer."""
 
-import os
 import streamlit as st
-import sys
 
-# Add the parent directory to the path to import config
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import config
+from ui import render_page_header
 
-# Set page config
-st.set_page_config(
-    page_title=f"{config.APP_NAME} - About",
-    page_icon=config.LOGO_ICON_PATH,
-    layout="wide",
-    # initial_sidebar_state="collapsed"
-)
 
-# Logo in sidebar
-st.logo(config.LOGO_TEXT_PATH, size="large", icon_image=config.LOGO_ICON_PATH)
+def main():
+    render_page_header(
+        "About",
+        subtitle="by Corpus Analytica",
+        page_icon="material/info",
+    )
 
-# Page title
-one_cola = st.columns([1])[0]
-with one_cola:
-    col1a, col2a = st.columns([1, 5])
-
-    with col1a:
-        # team_image = config.LOGO_TEAM_PATH
-        st.image(config.LOGO_TEAM_PATH, width=100)
-        # st.image(team_image, width=400)
-    with col2a:
-        st.markdown(
-            """
-        # Corpus Analyzer  
-         *by Corpus Analytica*
-        """,
-            unsafe_allow_html=True,
-        )
-
-height = 50
-st.markdown(f'<div style="height: {height}px;"></div>', unsafe_allow_html=True)
-
-# --- Content ---
-st.markdown("""
+    st.markdown("""
 # Corpus Analyzer Overview
 
 Corpus Analyzer is a cutting-edge medical AI platform that delivers intelligent diagnostics, image analysis, and research insights through a secure, intuitive interface built for healthcare professionals and patients alike.
@@ -86,5 +54,5 @@ Your health is invaluable. With Corpus Analytica, discover a smarter, safer, and
 
 """)
 
-height = 50
-st.markdown(f'<div style="height: {height}px;"></div>', unsafe_allow_html=True)
+
+main()

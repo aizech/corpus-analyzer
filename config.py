@@ -1,4 +1,9 @@
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 
 class Config:
@@ -13,6 +18,13 @@ class Config:
     APP_URL = "https://www.corpusanalytica.com/"
     CONTACT_EMAIL = "support@corpusanalytica.com"
 
+    # --- Feature toggles ---
+    ENABLE_PDF_EXPORT = os.environ.get("ENABLE_PDF_EXPORT", "true").lower() in (
+        "true",
+        "1",
+        "yes",
+    )
+
     GITHUB_REPO_URL = "https://github.com/aizech/corpus-analyzer"
 
     THIS_DIR = Path(__file__).parent
@@ -25,11 +37,7 @@ class Config:
     MENU_ITEMS = {
         "Get Help": f"{APP_URL}/help",
         "Report a bug": f"{APP_URL}/about",
-        "About": "## This is the "
-        + APP_NAME
-        + " App!  Made with "
-        + ":heart: by "
-        + COMPANY,
+        "About": "## This is the " + APP_NAME + " App!  Made with " + ":heart: by " + COMPANY,
     }
 
     MASTER_AGENT_ICON = ASSETS_DIR / "godsinwhite_radiologist_light.png"

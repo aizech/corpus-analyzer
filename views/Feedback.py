@@ -7,36 +7,7 @@ from email.message import EmailMessage
 import streamlit as st
 
 from config import config
-
-# Page config
-st.set_page_config(
-    page_title=f"{config.APP_NAME} - Feedback",
-    page_icon=config.APP_ICON,
-    layout="wide",
-    # initial_sidebar_state="collapsed",
-    menu_items=config.MENU_ITEMS,
-)
-
-# Logo in sidebar
-st.logo(config.LOGO_TEXT_PATH, size="large", icon_image=config.LOGO_ICON_PATH)
-
-# Page title
-one_cola = st.columns([1])[0]
-with one_cola:
-    col1a, col2a = st.columns([1, 5])
-
-    with col1a:
-        # team_image = config.LOGO_TEAM_PATH
-        st.image(config.LOGO_TEAM_PATH, width=100)
-        # st.image(team_image, width=400)
-    with col2a:
-        st.markdown(
-            """
-        # Corpus Analyzer 
-        ## Feedback
-        """,
-            unsafe_allow_html=True,
-        )
+from ui import render_page_header
 
 
 def _get_secret(name: str, default: str | None = None) -> str | None:
@@ -122,7 +93,11 @@ def _send_feedback_email(
 
 
 def main() -> None:
-    # st.title("Feedback")
+    render_page_header(
+        "Feedback",
+        subtitle="Share your thoughts",
+        page_icon="material/rate_review",
+    )
 
     repo_url = _get_secret("GITHUB_REPO_URL", config.GITHUB_REPO_URL)
 
@@ -148,8 +123,6 @@ def main() -> None:
         rating_selected = st.feedback(
             "stars",
             key="feedback_rating",
-            default=4,
-            width="content",
         )
         rating = (rating_selected + 1) if rating_selected is not None else 5
 
@@ -189,5 +162,4 @@ def main() -> None:
         st.success("Thanks — your feedback was sent!")
 
 
-if __name__ == "__main__":
-    main()
+main()
