@@ -80,12 +80,14 @@ def main():
         model_options = {
             "gpt-4o": "openai:gpt-4o",
             "gpt-4o-mini": "openai:gpt-4o-mini",
-            "gpt-5": "openai:gpt-5",
             "gpt-5.2": "openai:gpt-5.2",
+            "gpt-5.4-mini": "openai:gpt-5.4-mini",
+            "gpt-5.4": "openai:gpt-5.4",
+            "gpt-5.5": "openai:gpt-5.5",
         }
 
         # Get current default model
-        current_default = model_config.get("default_model", "gpt-5.2")
+        current_default = model_config.get("default_model", "gpt-5.4-mini")
 
         # Model selection
         st.subheader("Default AI Model")

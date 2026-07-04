@@ -35,8 +35,25 @@ codeBackgroundColor = "#ecebe4"
 showSidebarBorder = true
 #chartCategoricalColors = ["#0ea5e9", "#059669", "#fbbf24"]
 
+greenColor = "#6B9E8E"
+greenBackgroundColor = "rgba(107, 158, 142, 0.15)"
+greenTextColor = "#3d3a2a"
+orangeColor = "#E89B6A"
+orangeBackgroundColor = "rgba(248, 196, 176, 0.35)"
+orangeTextColor = "#3d3a2a"
+redColor = "#C45A7A"
+redBackgroundColor = "rgba(196, 90, 122, 0.15)"
+redTextColor = "#C45A7A"
+blueColor = "#6B8E9B"
+blueBackgroundColor = "rgba(107, 142, 155, 0.15)"
+blueTextColor = "#3d3a2a"
+
 [theme.sidebar]
-backgroundColor = "#f0f0ec"
-secondaryBackgroundColor = "#ecebe3"
+backgroundColor = "#ecebe3"
+secondaryBackgroundColor = "#f0f0ec"
+primaryColor = "#cb785c"
+textColor = "#3d3a2a"
+borderColor = "#d3d2ca"
+showSidebarBorder = true
 #headingFontSizes = ["1.6rem", "1.4rem", "1.2rem"]
 #dataframeHeaderBackgroundColor = "#e4e4e0"

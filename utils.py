@@ -119,11 +119,14 @@ async def selected_model() -> str:
         "gpt-4o-mini": "openai:gpt-4o-mini",
         "gpt-5": "openai:gpt-5",
         "gpt-5.2": "openai:gpt-5.2",
+        "gpt-5.4-mini": "openai:gpt-5.4-mini",
+        "gpt-5.4": "openai:gpt-5.4",
+        "gpt-5.5": "openai:gpt-5.5",
     }
 
     # Load model configuration
     model_config_file = os.path.join(os.path.dirname(__file__), "model_config.json")
-    default_model = "gpt-5.2"
+    default_model = "gpt-5.4-mini"
 
     if os.path.exists(model_config_file):
         try:
@@ -134,7 +137,7 @@ async def selected_model() -> str:
             pass
 
     # Use the default model from configuration
-    model_id = model_options.get(default_model, model_options["gpt-5.2"])
+    model_id = model_options.get(default_model, model_options["gpt-5.4-mini"])
     return model_id
 
 

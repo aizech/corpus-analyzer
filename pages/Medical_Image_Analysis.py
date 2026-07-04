@@ -26,7 +26,7 @@ def load_default_model() -> str:
         except Exception:
             pass
 
-    return "gpt-5.2"
+    return "gpt-5.4-mini"
 
 
 def anonymize_dicom_dataset(ds: pydicom.dataset.Dataset) -> pydicom.dataset.Dataset:
