@@ -86,7 +86,6 @@ def main():
     render_page_header(
         "Medical Image Analysis",
         subtitle="Upload a medical image for professional analysis",
-        page_icon="material/diagnosis",
     )
     render_sidebar_info()
 

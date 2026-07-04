@@ -9,7 +9,6 @@ def main():
     render_page_header(
         "About",
         subtitle="by Corpus Analytica",
-        page_icon="material/info",
     )
 
     st.markdown("""

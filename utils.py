@@ -105,9 +105,7 @@ def display_tool_calls(tool_calls_container, tools: Any) -> None:
                 tool_name = getattr(tool_call, "tool_name", None) or getattr(
                     tool_call, "name", "Unknown Tool"
                 )
-                tool_args = getattr(tool_call, "tool_args", None) or getattr(
-                    tool_call, "args", {}
-                )
+                tool_args = getattr(tool_call, "tool_args", None) or getattr(tool_call, "args", {})
                 content = getattr(tool_call, "content", None)
 
                 expander_title = f"Tool: {tool_name}"

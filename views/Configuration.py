@@ -10,7 +10,6 @@ def main():
     render_page_header(
         "Configuration",
         subtitle="System settings",
-        page_icon="material/settings",
     )
 
     tab1, tab2 = st.tabs([":material/tune: Models", ":material/key: API Keys"])

@@ -96,7 +96,6 @@ def main() -> None:
     render_page_header(
         "Feedback",
         subtitle="Share your thoughts",
-        page_icon="material/rate_review",
     )
 
     repo_url = _get_secret("GITHUB_REPO_URL", config.GITHUB_REPO_URL)

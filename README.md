@@ -1,7 +1,7 @@
 # Corpus Analyzer
 
-![Streamlit](https://img.shields.io/badge/Streamlit-1.28.0-FF4B4B.svg)
-![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.42.0-FF4B4B.svg)
+![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Demo](https://img.shields.io/badge/Demo-Live-orange.svg)
 
@@ -44,7 +44,7 @@ Transform medical diagnostics and second opinions through AI-driven analysis whi
 
 ### Prerequisites
 
-- **Python 3.9+** - Modern Python features and compatibility
+- **Python 3.10+** - Modern Python features and compatibility
 - **Git** - For repository cloning and version control
 - **Internet Connection** - For API access and model inference
 
@@ -53,7 +53,7 @@ Transform medical diagnostics and second opinions through AI-driven analysis whi
 ```bash
 # 1. Clone the repository
 git clone https://github.com/aizech/corpus-analyzer.git
-cd corpus_analyzer
+cd corpus-analyzer
 
 # 2. Create virtual environment
 python -m venv venv
@@ -84,12 +84,32 @@ Configure your OpenAI API key in the Configuration page or via environment:
 # Visit http://localhost:8501 and navigate to Configuration page
 # Enter your API key in the provided field
 
-# Option 2: Environment Variable
-export OPENAI_API_KEY="sk-your-openai-key-here"
-
-# Option 3: .env file
-echo "OPENAI_API_KEY=sk-your-openai-key-here" > .env
+# Option 2: Environment file
+# Copy the example file and add your real values
+cp .env.example .env
 ```
+
+### Optional PDF Export
+
+PDF export is disabled by default in `requirements.txt`. To enable it, install the optional dependency:
+
+```bash
+pip install -e ".[pdf]"
+```
+
+Or uncomment the `fpdf2` line in `requirements.txt` and run `pip install -r requirements.txt`.
+
+Set `ENABLE_PDF_EXPORT` in your `.env` to control the feature:
+
+```bash
+# Enable PDF export (requires fpdf2)
+ENABLE_PDF_EXPORT="true"
+
+# Disable PDF export to avoid loading fpdf2 entirely
+ENABLE_PDF_EXPORT="false"
+```
+
+When PDF export is disabled, the app still offers Markdown export and no `fpdf2` warning is shown.
 
 ### Optional Email Configuration
 
@@ -149,7 +169,7 @@ corpus-analyzer/
 | **Frontend** | [Streamlit](https://streamlit.io/) | Web interface |
 | **AI Models** | OpenAI GPT (GPT-4o, GPT-5.4-mini, etc.) | Medical inference |
 | **Image Processing** | Pillow, pydicom | DICOM and image handling |
-| **Export** | fpdf2, markdown | PDF and Markdown reports |
+| **Export** | markdown (required), fpdf2 (optional) | Markdown and optional PDF reports |
 | **Testing** | pytest, ruff | Code quality and regression tests |
 
 ---
@@ -207,44 +227,6 @@ The Phase 1 release includes a specialized Medical Imaging agent with capabiliti
 > The platform is not FDA-approved for clinical decision-making and should not replace professional medical advice, diagnosis, or treatment. Always consult with a qualified healthcare provider for medical concerns.
 
 ---
-
-## 🔧 Development
-
-### Local Development
-
-```bash
-# Install development dependencies
-pip install -r requirements.txt
-
-# Run with auto-reload
-streamlit run app.py --server.runOnSave true
-
-# Enable debug mode
-streamlit run app.py --logger.level debug
-```
-
-### Testing
-
-```bash
-# Run application tests
-python -m pytest tests/
-
-# Run with coverage
-python -m pytest --cov=. tests/
-```
-
-### Code Quality
-
-```bash
-# Format code
-black .
-
-# Lint code
-ruff check .
-
-# Type checking (optional)
-mypy app/ agents/
-```
 
 ---
 
@@ -357,28 +339,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - **Contributors**: [GitHub Contributors](https://github.com/aizech/corpus-analyzer/graphs/contributors)
 - **Medical Advisory Board**: Clinical experts and radiologists
 - **Developer Community**: AI engineers and healthcare technologists
-
----
-
-## 🗺️ Roadmap
-
-### Phase 2 (Q2 2024)
-- **Multi-Agent Coordination**: Specialist agents for different modalities
-- **DICOM Integration**: Direct PACS connectivity
-- **Advanced Reporting**: Structured report templates
-- **Mobile Support**: Responsive mobile interface
-
-### Phase 3 (Q3 2024)
-- **Real-time Collaboration**: Multi-user review sessions
-- **AI Training**: Custom model fine-tuning
-- **Integration Hub**: EHR and PACS connectors
-- **Analytics Dashboard**: Usage and performance metrics
-
-### Long-term Vision
-- **Clinical Validation**: FDA clearance pathway
-- **Global Deployment**: Multi-language support
-- **Research Platform**: Clinical trial integration
-- **AI Education**: Medical AI training platform
 
 ---
 

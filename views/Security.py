@@ -7,7 +7,6 @@ def main():
     render_page_header(
         "Security",
         subtitle="Security & Privacy",
-        page_icon="material/security",
     )
 
     st.markdown("""

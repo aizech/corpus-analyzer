@@ -6,13 +6,10 @@ import streamlit as st
 
 from config import config
 
-APP_ICON = "material/diagnosis"
-
 
 def render_page_header(
     title: str,
     subtitle: Optional[str] = None,
-    page_icon: Optional[str] = None,
     use_logo: bool = True,
 ) -> None:
     """Render the common page header with logo, title, and optional subtitle."""
@@ -28,7 +25,7 @@ def render_page_header(
             st.markdown(
                 f"""
                 # {config.APP_NAME}
-                {f"## {subtitle}" if subtitle else ""}
+                {f'<h3 style="font-size: 1.1rem; margin-top: 0.25rem;">{subtitle}</h3>' if subtitle else ""}
                 """,
                 unsafe_allow_html=True,
             )
