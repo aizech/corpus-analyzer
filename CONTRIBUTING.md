@@ -135,6 +135,7 @@ Thank you for your interest in contributing to the Corpus Analytica projects! We
   ```python
   from typing import List, Dict, Optional
 
+
   def analyze_medical_image(image_path: str) -> Dict[str, str]:
       # Function implementation
       pass
@@ -155,8 +156,8 @@ Thank you for your interest in contributing to the Corpus Analytica projects! We
        instructions=[
            "Always provide evidence-based analysis",
            "Include confidence levels for assessments",
-           "Suggest when human expert consultation is needed"
-       ]
+           "Suggest when human expert consultation is needed",
+       ],
    )
    ```
 
@@ -166,6 +167,7 @@ Thank you for your interest in contributing to the Corpus Analytica projects! We
    def anonymize_medical_data(data: Dict) -> Dict:
        # Remove or hash PHI (Protected Health Information)
        pass
+
 
    # Implement proper error handling for medical scenarios
    def safe_medical_analysis(image_path: str) -> Optional[Dict]:
@@ -213,6 +215,7 @@ Thank you for your interest in contributing to the Corpus Analytica projects! We
 import pytest
 from medical_agent import MedicalImagingAgent
 
+
 def test_medical_image_analysis():
     """Test medical image analysis functionality."""
     agent = MedicalImagingAgent()
@@ -223,6 +226,7 @@ def test_medical_image_analysis():
     assert "disclaimer" in result
     assert result["confidence_score"] >= 0
     assert result["confidence_score"] <= 100
+
 
 def test_medical_disclaimer_inclusion():
     """Ensure all medical responses include disclaimers."""

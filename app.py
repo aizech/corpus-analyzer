@@ -14,7 +14,7 @@ st.set_page_config(
 pages = [
     st.Page(
         "views/Medical_Image_Analysis.py",
-        title="Medical Image Analysis",
+        title="Analyze",
         icon=":material/diagnosis:",
     ),
     st.Page("views/Security.py", title="Security", icon=":material/security:"),

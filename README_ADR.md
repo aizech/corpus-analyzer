@@ -22,8 +22,8 @@ This document outlines the key architectural decisions, system design, and imple
 
 ### ADR-001: Multi-Agent Architecture Pattern
 
-**Status:** Accepted  
-**Date:** 2024-08-26  
+**Status:** Accepted
+**Date:** 2024-08-26
 **Decision Makers:** Development Team
 
 #### Context
@@ -46,8 +46,8 @@ Implement a multi-agent architecture using the Agno framework with specialized m
 
 ### ADR-002: Streamlit as Frontend Framework
 
-**Status:** Accepted  
-**Date:** 2024-08-26  
+**Status:** Accepted
+**Date:** 2024-08-26
 **Decision Makers:** Development Team
 
 #### Context
@@ -70,8 +70,8 @@ Use Streamlit as the primary frontend framework for the web application.
 
 ### ADR-003: SQLite + LanceDB Hybrid Storage
 
-**Status:** Accepted  
-**Date:** 2024-08-26  
+**Status:** Accepted
+**Date:** 2024-08-26
 **Decision Makers:** Development Team
 
 #### Context
@@ -94,8 +94,8 @@ Implement hybrid storage using SQLite for session management and LanceDB for vec
 
 ### ADR-004: OpenAI GPT-4o as Primary Model
 
-**Status:** Accepted  
-**Date:** 2024-08-26  
+**Status:** Accepted
+**Date:** 2024-08-26
 **Decision Makers:** Development Team
 
 #### Context
@@ -118,8 +118,8 @@ Use OpenAI GPT-4o as the primary model with support for alternative models (Clau
 
 ### ADR-005: Factory Pattern for Agent Creation
 
-**Status:** Accepted  
-**Date:** 2024-08-26  
+**Status:** Accepted
+**Date:** 2024-08-26
 **Decision Makers:** Development Team
 
 #### Context
@@ -142,8 +142,8 @@ Implement factory pattern for agent creation with dynamic discovery and configur
 
 ### ADR-006: Medical Disclaimer and Compliance
 
-**Status:** Accepted  
-**Date:** 2024-08-26  
+**Status:** Accepted
+**Date:** 2024-08-26
 **Decision Makers:** Development Team, Legal Team
 
 #### Context
@@ -166,8 +166,8 @@ Implement comprehensive medical disclaimers and educational-use-only positioning
 
 ### ADR-007: Agno Framework Compatibility
 
-**Status:** Accepted  
-**Date:** 2024-09-15  
+**Status:** Accepted
+**Date:** 2024-09-15
 **Decision Makers:** Development Team
 
 #### Context
@@ -191,8 +191,8 @@ Refactor the codebase to align with the current Agno framework API, focusing on 
 
 ### ADR-008: Dark Theme UI Implementation
 
-**Status:** Accepted  
-**Date:** 2024-09-18  
+**Status:** Accepted
+**Date:** 2024-09-18
 **Decision Makers:** Development Team, UX Team
 
 #### Context
@@ -225,14 +225,14 @@ graph TB
         Pages[Multiple Pages]
         Components[Reusable Components]
     end
-    
+
     subgraph "Application Layer"
         HALO[HALO Team Coordinator]
         AgentFactory[Agent Factory]
         SessionMgr[Session Manager]
         ConfigMgr[Configuration Manager]
     end
-    
+
     subgraph "Agent Layer"
         MedAgent[Medical Imaging Agent]
         ResAgent[Research Agent]
@@ -241,27 +241,27 @@ graph TB
         PubAgent[PubMed Agent]
         VisAgent[Visualizer Agent]
     end
-    
+
     subgraph "Service Layer"
         ToolKit[Tool Orchestration]
         KnowledgeBase[Knowledge Management]
         Memory[Memory System]
         Storage[Session Storage]
     end
-    
+
     subgraph "Data Layer"
         SQLite[(SQLite DB)]
         LanceDB[(LanceDB Vector Store)]
         FileSystem[(File System)]
         TempStorage[(Temporary Storage)]
     end
-    
+
     subgraph "External Services"
         OpenAI[OpenAI API]
         PubMed[PubMed API]
         WebSearch[Web Search APIs]
     end
-    
+
     UI --> HALO
     Pages --> Components
     HALO --> AgentFactory
@@ -272,22 +272,22 @@ graph TB
     AgentFactory --> CalcAgent
     AgentFactory --> PubAgent
     AgentFactory --> VisAgent
-    
+
     MedAgent --> ToolKit
     ResAgent --> ToolKit
     DataAgent --> ToolKit
-    
+
     ToolKit --> KnowledgeBase
     ToolKit --> Memory
     Memory --> SQLite
     KnowledgeBase --> LanceDB
     SessionMgr --> Storage
     Storage --> SQLite
-    
+
     HALO --> OpenAI
     PubAgent --> PubMed
     ResAgent --> WebSearch
-    
+
     FileSystem --> TempStorage
 ```
 
@@ -302,7 +302,7 @@ sequenceDiagram
     participant Tools as Tool System
     participant KB as Knowledge Base
     participant API as External APIs
-    
+
     User->>UI: Submit medical query with image
     UI->>HALO: Process request
     HALO->>HALO: Analyze query requirements
@@ -327,73 +327,73 @@ flowchart TD
         DocumentUpload[Document Upload]
         TextInput[Text Query]
     end
-    
+
     subgraph "Request Processing"
         RequestParser[Request Parser]
         ContentValidator[Content Validator]
         SecurityCheck[Security Validation]
     end
-    
+
     subgraph "Agent Orchestration"
         HALO[HALO Coordinator]
         AgentSelector[Agent Selection Logic]
         TaskDistributor[Task Distribution]
     end
-    
+
     subgraph "Specialized Processing"
         ImageAnalysis[Medical Image Analysis]
         TextAnalysis[Medical Text Analysis]
         ResearchQuery[Literature Research]
         DataProcessing[Data Analysis]
     end
-    
+
     subgraph "Knowledge Integration"
         VectorSearch[Vector Knowledge Search]
         LiteratureSearch[PubMed Search]
         ContextAggregation[Context Aggregation]
     end
-    
+
     subgraph "Response Generation"
         ResponseSynthesis[Response Synthesis]
         MedicalDisclaimer[Medical Disclaimer Addition]
         FormatOutput[Output Formatting]
     end
-    
+
     subgraph "Output Delivery"
         StreamingResponse[Real-time Streaming]
         SessionStorage[Session Persistence]
         UserInterface[UI Display]
     end
-    
+
     UserInput --> RequestParser
     ImageUpload --> RequestParser
     DocumentUpload --> RequestParser
     TextInput --> RequestParser
-    
+
     RequestParser --> ContentValidator
     ContentValidator --> SecurityCheck
     SecurityCheck --> HALO
-    
+
     HALO --> AgentSelector
     AgentSelector --> TaskDistributor
     TaskDistributor --> ImageAnalysis
     TaskDistributor --> TextAnalysis
     TaskDistributor --> ResearchQuery
     TaskDistributor --> DataProcessing
-    
+
     ImageAnalysis --> VectorSearch
     TextAnalysis --> VectorSearch
     ResearchQuery --> LiteratureSearch
     DataProcessing --> ContextAggregation
-    
+
     VectorSearch --> ResponseSynthesis
     LiteratureSearch --> ResponseSynthesis
     ContextAggregation --> ResponseSynthesis
-    
+
     ResponseSynthesis --> MedicalDisclaimer
     MedicalDisclaimer --> FormatOutput
     FormatOutput --> StreamingResponse
-    
+
     StreamingResponse --> SessionStorage
     StreamingResponse --> UserInterface
 ```
@@ -410,24 +410,24 @@ graph TB
             AgnoFramework[Agno Framework]
             Agents[Medical Agents]
         end
-        
+
         subgraph "Local Storage"
             SQLiteLocal[(SQLite Sessions)]
             LanceDBLocal[(LanceDB Knowledge)]
             TempFiles[(Temporary Files)]
         end
-        
+
         subgraph "Configuration"
             EnvFile[.env Configuration]
             ConfigPy[config.py Settings]
         end
     end
-    
+
     subgraph "External Services"
         OpenAIAPI[OpenAI API]
         PubMedAPI[PubMed API]
     end
-    
+
     StreamlitApp --> SQLiteLocal
     StreamlitApp --> LanceDBLocal
     AgnoFramework --> OpenAIAPI
@@ -443,57 +443,57 @@ graph TB
     subgraph "Load Balancer"
         LB[Application Load Balancer]
     end
-    
+
     subgraph "Application Tier"
         App1[Streamlit Instance 1]
         App2[Streamlit Instance 2]
         App3[Streamlit Instance N]
     end
-    
+
     subgraph "Data Tier"
         SharedStorage[(Shared File Storage)]
         SQLiteCluster[(SQLite Cluster)]
         LanceDBCluster[(LanceDB Cluster)]
     end
-    
+
     subgraph "External Services"
         OpenAIAPI[OpenAI API]
         PubMedAPI[PubMed API]
         MonitoringService[Application Monitoring]
     end
-    
+
     subgraph "Security Layer"
         WAF[Web Application Firewall]
         SSL[SSL Termination]
         APIGateway[API Gateway]
     end
-    
+
     Internet --> WAF
     WAF --> SSL
     SSL --> LB
     LB --> App1
     LB --> App2
     LB --> App3
-    
+
     App1 --> SharedStorage
     App2 --> SharedStorage
     App3 --> SharedStorage
-    
+
     App1 --> SQLiteCluster
     App2 --> SQLiteCluster
     App3 --> SQLiteCluster
-    
+
     App1 --> LanceDBCluster
     App2 --> LanceDBCluster
     App3 --> LanceDBCluster
-    
+
     App1 --> APIGateway
     App2 --> APIGateway
     App3 --> APIGateway
-    
+
     APIGateway --> OpenAIAPI
     APIGateway --> PubMedAPI
-    
+
     App1 --> MonitoringService
     App2 --> MonitoringService
     App3 --> MonitoringService
@@ -565,6 +565,6 @@ This architecture provides a solid foundation for continued development and exte
 
 ---
 
-**Document Version:** 2.0  
-**Last Updated:** September 19, 2025  
+**Document Version:** 2.0
+**Last Updated:** September 19, 2025
 **Next Review:** October 19, 2025

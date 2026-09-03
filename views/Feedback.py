@@ -7,7 +7,7 @@ from email.message import EmailMessage
 import streamlit as st
 
 from config import config
-from ui import render_page_header
+from ui import render_page_header, section_header
 
 
 def _get_secret(name: str, default: str | None = None) -> str | None:
@@ -43,7 +43,8 @@ def _send_feedback_email(
 
     if not smtp_host or not smtp_port_str or not smtp_from or not smtp_to:
         raise RuntimeError(
-            "Missing SMTP configuration. Please set SMTP_HOST, SMTP_PORT, SMTP_FROM, SMTP_TO (and optionally SMTP_USERNAME/SMTP_PASSWORD)."
+            "Missing SMTP configuration. Please set SMTP_HOST, SMTP_PORT, SMTP_FROM, SMTP_TO "
+            "(and optionally SMTP_USERNAME/SMTP_PASSWORD)."
         )
 
     try:
@@ -100,7 +101,7 @@ def main() -> None:
 
     repo_url = _get_secret("GITHUB_REPO_URL", config.GITHUB_REPO_URL)
 
-    st.subheader("Report bugs / request features")
+    section_header("Report bugs / request features")
 
     if repo_url:
         bug_url = f"{repo_url.rstrip('/')}/issues/new?template=bug_report.yml"
@@ -111,12 +112,11 @@ def main() -> None:
         )
     else:
         st.info(
-            "GitHub links are not configured. Set the environment variable `GITHUB_REPO_URL` "
+            "GitHub links are not configured. Set the environment variable ``GITHUB_REPO_URL`` "
             "(e.g. https://github.com/<org>/<repo>) to enable one-click issue links."
         )
 
-    st.divider()
-    st.subheader("Rate the app")
+    section_header("Rate the app")
 
     with st.form("feedback_form"):
         rating_selected = st.feedback(
@@ -153,7 +153,8 @@ def main() -> None:
             )
         except Exception as e:
             st.error(
-                "Could not send feedback email. Please check SMTP settings (SMTP_HOST, SMTP_PORT, SMTP_FROM, SMTP_TO, SMTP_USERNAME, SMTP_PASSWORD, SMTP_USE_TLS)."
+                "Could not send feedback email. Please check SMTP settings (SMTP_HOST, SMTP_PORT, "
+                "SMTP_FROM, SMTP_TO, SMTP_USERNAME, SMTP_PASSWORD, SMTP_USE_TLS)."
             )
             st.exception(e)
             return

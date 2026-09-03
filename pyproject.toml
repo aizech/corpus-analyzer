@@ -17,6 +17,10 @@ dependencies = [
     "markdown==3.7",
     "python-dotenv==1.0.1",
     "pydantic==2.11.0",
+    "PyYAML==6.0.2",
+    "httpx==0.28.1",
+    "trafilatura==2.0.0",
+    "nest_asyncio==1.6.0",
 ]
 
 [project.optional-dependencies]
@@ -53,7 +57,7 @@ indent-style = "space"
 line-ending = "auto"
 
 [tool.ruff.lint.isort]
-known-first-party = ["agents", "config", "dicom_utils", "export", "models", "ui", "utils"]
+known-first-party = ["agent_config", "agents", "analysis_format", "config", "dicom_utils", "export", "models", "ui", "utils"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

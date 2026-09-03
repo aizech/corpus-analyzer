@@ -1,0 +1,217 @@
+/* Corpus Analyzer custom theme overrides */
+
+:root {
+    --ca-primary: #cb785c;
+    --ca-primary-dark: #a65d46;
+    --ca-bg: #fdfdf8;
+    --ca-surface: #ffffff;
+    --ca-surface-alt: #ecebe3;
+    --ca-text: #3d3a2a;
+    --ca-text-muted: #6b6655;
+    --ca-border: #dddace;
+    --ca-radius: 12px;
+    --ca-shadow: 0 2px 8px rgba(61, 58, 42, 0.08);
+}
+
+/* Empty state call-to-action */
+.ca-empty {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    background: var(--ca-surface);
+    border: 2px dashed var(--ca-border);
+    border-radius: var(--ca-radius);
+    color: var(--ca-text-muted);
+}
+
+.ca-empty-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--ca-primary);
+}
+
+.ca-empty-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--ca-text);
+    margin-bottom: 0.5rem;
+}
+
+/* Workflow steps */
+.ca-workflow {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+}
+
+.ca-workflow-step {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--ca-surface-alt);
+    border-radius: 999px;
+    font-size: 0.9rem;
+    color: var(--ca-text);
+}
+
+.ca-workflow-step .number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: var(--ca-primary);
+    color: white;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* Cards */
+.ca-card {
+    background: var(--ca-surface);
+    border: 1px solid var(--ca-border);
+    border-radius: var(--ca-radius);
+    padding: 1.25rem;
+    box-shadow: var(--ca-shadow);
+    margin-bottom: 1rem;
+}
+
+.ca-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ca-text);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ca-card-muted {
+    color: var(--ca-text-muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* Badges */
+.ca-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.ca-badge-clinician {
+    background: #e8f4fd;
+    color: #1a5a8a;
+}
+
+.ca-badge-patient {
+    background: #e8f8e8;
+    color: #2a6a2a;
+}
+
+.ca-badge-researcher {
+    background: #f3e8fd;
+    color: #5a2a8a;
+}
+
+.ca-badge-confidence-high {
+    background: #e8f8e8;
+    color: #2a6a2a;
+}
+
+.ca-badge-confidence-medium {
+    background: #fff8e8;
+    color: #8a6a1a;
+}
+
+.ca-badge-confidence-low {
+    background: #fde8e8;
+    color: #8a2a2a;
+}
+
+/* Section headers */
+.ca-section-header {
+    margin-bottom: 1rem;
+}
+
+.ca-section-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--ca-text);
+    margin-bottom: 0.25rem;
+}
+
+.ca-section-subtitle {
+    font-size: 0.95rem;
+    color: var(--ca-text-muted);
+}
+
+/* Consent panel */
+.ca-consent {
+    background: #fff8e8;
+    border: 1px solid #f0e0b0;
+    border-radius: var(--ca-radius);
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+}
+
+.ca-consent-title {
+    font-weight: 600;
+    color: #5a4a1a;
+    margin-bottom: 0.5rem;
+}
+
+.ca-consent-list {
+    margin: 0.5rem 0 0 1.25rem;
+    color: #5a4a1a;
+    font-size: 0.9rem;
+}
+
+/* Image viewer container */
+.ca-image-viewer {
+    border: 1px solid var(--ca-border);
+    border-radius: var(--ca-radius);
+    overflow: hidden;
+    background: var(--ca-surface);
+    text-align: center;
+}
+
+.ca-image-viewer img {
+    max-width: 100%;
+    height: auto;
+    cursor: zoom-in;
+    transition: transform 0.2s ease;
+}
+
+/* Report sections */
+.ca-report-section {
+    margin-bottom: 0.75rem;
+}
+
+.ca-report-section summary {
+    font-weight: 600;
+    color: var(--ca-text);
+    cursor: pointer;
+    padding: 0.5rem 0;
+}
+
+.ca-report-body {
+    padding: 0.5rem 0 0.75rem;
+    color: var(--ca-text);
+    line-height: 1.6;
+}
+
+/* Mobile stacking */
+@media (max-width: 768px) {
+    .ca-workflow {
+        flex-direction: column;
+        align-items: center;
+    }
+}

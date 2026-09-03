@@ -5,7 +5,7 @@
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Demo](https://img.shields.io/badge/Demo-Live-orange.svg)
 
-> 🏥 **Multi-Agent Medical AI Platform**  
+> 🏥 **Multi-Agent Medical AI Platform**
 > Intelligent diagnostics, image analysis, and research insights through a secure, intuitive interface. Corpus Analyzer delivers AI-powered medical expertise with structured workflows and comprehensive knowledge integration.
 
 **Live Demo:** [corpus-analyzer.streamlit.app](https://corpus-analyzer.streamlit.app/)
@@ -33,6 +33,7 @@ Transform medical diagnostics and second opinions through AI-driven analysis whi
 - **Session Management**: Persistent conversation memory and context
 
 ### 🎨 User Experience
+- **Role-Aware Output**: Clinician, patient, and researcher views of the same analysis
 - **Modern Interface**: Clean, responsive design with light/dark themes
 - **Intuitive Workflow**: Step-by-step medical analysis process
 - **Feedback System**: User ratings and continuous improvement
@@ -147,12 +148,20 @@ corpus-analyzer/
 │   ├── Security.py               # Security and privacy information
 │   └── About.py                  # Platform information
 ├── agents/
-│   ├── medical_agent.py          # Medical imaging agent factory
-│   └── medical_agent_prompt.md   # Agent prompt loaded at runtime
+│   └── medical_agent.py        # Routed medical imaging agent factory
+├── agent_config/                 # Routed agent configuration
+│   ├── agent_config.py         # Agent and RoutedAgent factories
+│   ├── skill_router.py         # Skill discovery, ranking, and prompt composition
+│   └── tool_registry.py        # Tool discovery from skill directories
+├── skills/
+│   └── core/
+│       ├── medical-image-analysis/SKILL.md  # Medical imaging skill
+│       └── web-fetcher/                     # Web fetch tool for literature lookup
 ├── assets/                       # Static assets and images
 ├── config.py                     # Application constants
 ├── dicom_utils.py                # DICOM anonymization helpers
 ├── export.py                     # PDF / Markdown report generation
+├── analysis_format.py            # Structured report parser
 ├── models.py                     # Model configuration and selection
 ├── ui.py                         # Shared Streamlit UI components
 ├── utils.py                      # General utility functions
@@ -223,7 +232,7 @@ The Phase 1 release includes a specialized Medical Imaging agent with capabiliti
 ### Medical Disclaimer
 
 > **⚠️ Important:** This platform is designed for educational and demonstration purposes only. All medical analyses, suggestions, or information should be reviewed by qualified healthcare professionals before making medical decisions.
-> 
+>
 > The platform is not FDA-approved for clinical decision-making and should not replace professional medical advice, diagnosis, or treatment. Always consult with a qualified healthcare provider for medical concerns.
 
 ---
@@ -344,7 +353,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 <div align="center">
 
-**🏥 Built by [Corpus Analytica](https://corpusanalytica.com)**  
+**🏥 Built by [Corpus Analytica](https://corpusanalytica.com)**
 *Advancing medical AI through intelligent, ethical, and accessible solutions*
 
 [![Live Demo](https://img.shields.io/badge/Demo-Try_Now-FF4B4B.svg)](https://corpus-analyzer.streamlit.app/)

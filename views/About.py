@@ -2,56 +2,53 @@
 
 import streamlit as st
 
-from ui import render_page_header
+from config import config
+from ui import render_page_header, section_header
 
 
 def main():
     render_page_header(
         "About",
-        subtitle="by Corpus Analytica",
+        subtitle="Corpus Analyzer",
     )
 
-    st.markdown("""
-# Corpus Analyzer Overview
+    section_header("What Corpus Analyzer does")
+    st.markdown(
+        "Corpus Analyzer is an educational medical image analysis tool. Upload an X-ray, MRI, "
+        "CT, ultrasound, or DICOM image and receive a structured, AI-generated report with technical "
+        "assessment, findings, clinical interpretation, patient-friendly explanation, and references."
+    )
 
-Corpus Analyzer is a cutting-edge medical AI platform that delivers intelligent diagnostics, image analysis, and research insights through a secure, intuitive interface built for healthcare professionals and patients alike.
+    section_header("How to use it")
+    st.markdown(
+        """
+        1. Go to **Analyze** and upload a medical image.
+        2. Confirm that the image contains no patient-identifying information.
+        3. Optionally add context (symptoms, history, or the language you want).
+        4. Click **Analyze Image** and wait for the structured report.
+        5. Switch between **Clinician**, **Patient**, and **Researcher** views.
+        6. Download the report as Markdown or PDF.
+        """
+    )
 
-## Key Features
+    section_header("Important")
+    st.warning(
+        "This tool is for educational and informational purposes only. It is not FDA-approved "
+        "for clinical decision-making. Always consult a qualified healthcare provider for medical "
+        "advice, diagnosis, or treatment."
+    )
 
-- **Intelligent Diagnostics**: Advanced AI-powered analysis for accurate medical interpretations
-- **Image Analysis**: Comprehensive medical image processing and interpretation
-- **Research Insights**: Access to medical literature and research databases
-- **Secure Platform**: Enterprise-grade security for patient data protection
+    section_header("Resources")
+    st.markdown(
+        f"- [Report an issue]({config.GITHUB_REPO_URL}/issues)\n"
+        f"- [Request a feature]({config.GITHUB_REPO_URL}/issues)\n"
+        f"- [Security & Privacy](/Security)"
+    )
 
-## Why Choose Corpus Analyzer?
-
-Corpus Analyzer stands at the forefront of medical AI innovation, combining cutting-edge technology with clinical expertise to deliver unparalleled healthcare solutions. Our platform is designed to empower both healthcare providers and patients with intelligent tools that enhance decision-making and improve outcomes.
-
-## Our Mission
-
-To revolutionize healthcare delivery through intelligent AI-powered tools that enhance diagnostic accuracy, improve patient outcomes, and make expert medical insights accessible to all.
-
-# Corpus Analytica - Your Trusted Partner in Healthcare
-
-At [Corpus Analytica](https://www.corpusanalytica.com), we redefine how medical professionals and patients connect—through a platform built for simplicity, security, and global reach.
-
-#### What We Offer:
-- Seamless Connections: We unite doctors, specialists, and patients through our cutting-edge digital platform.
-
-- Expert Second Opinions: Gain easy access to a network of certified physicians and specialists for reliable second opinions.
-
-- Effortless Booking: Our intuitive interface makes requesting and scheduling consultations fast and frustration-free.
-
-- Global Access: Wherever you are, our online consultations bring expert medical advice right to your screen.
-
-- Data You Can Trust: We uphold the highest standards in data protection and patient privacy—because your health deserves nothing less.
-
-#### Experience Healthcare in a New Dimension
-Your health is invaluable. With Corpus Analytica, discover a smarter, safer, and more connected way to care.
-
-> *"Healthcare should be accessible, transparent, and empowering. At Corpus Analytica, we're building more than just a platform—we're building trust, one consultation at a time."* — Bernhard Z., Founder of [Corpus Analytica](https://www.corpusanalytica.com)
-
-""")
+    st.markdown("---")
+    st.caption(
+        '"Healthcare should be accessible, transparent, and empowering." — Bernhard Z., Founder of Corpus Analytica'
+    )
 
 
 main()
