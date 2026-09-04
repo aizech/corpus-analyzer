@@ -261,9 +261,9 @@ def _render_clinician_view(sections: dict, raw_text: str) -> None:
 def _render_patient_view(sections: dict, raw_text: str) -> None:
     """Render a simplified patient-friendly view."""
     if "patient education" in sections:
-        card("What this means", sections["patient education"], icon="ℹ️")
+        card("What this means", sections["patient education"], icon=":material/info:")
     elif "clinical interpretation" in sections:
-        card("What this means", sections["clinical interpretation"], icon="ℹ️")
+        card("What this means", sections["clinical interpretation"], icon=":material/info:")
 
     if "clinical interpretation" in sections and "patient education" in sections:
         with st.expander("Clinical details", expanded=False):
@@ -363,7 +363,7 @@ def main() -> None:
 
     if uploaded_file is None:
         empty_state(
-            icon="📤",
+            icon=":material/upload_file:",
             title="Upload a medical image to begin",
             description="Corpus Analyzer uses AI to provide educational analysis of X-rays, "
             "MRI, CT, and ultrasound images.",

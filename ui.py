@@ -1,5 +1,6 @@
 """Shared Streamlit UI components for Corpus Analyzer pages."""
 
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -8,6 +9,19 @@ import streamlit as st
 from config import config
 
 _CSS_PATH = Path(__file__).parent / "assets" / "custom.css"
+_MATERIAL_ICON_RE = re.compile(r":material/([a-z0-9_]+):")
+
+
+def _render_icon_html(icon: str) -> str:
+    """Convert a material icon reference or emoji/character into HTML.
+
+    Supports ``:material/icon_name:`` syntax and falls back to plain text.
+    """
+    match = _MATERIAL_ICON_RE.fullmatch(icon.strip())
+    if match:
+        name = match.group(1)
+        return f'<span class="material-symbols-rounded">{name}</span>'
+    return f"<span>{icon}</span>"
 
 
 def inject_custom_css() -> None:
@@ -63,7 +77,7 @@ def render_sidebar_info() -> None:
 
 def card(title: str, content: str, icon: Optional[str] = None) -> None:
     """Render a styled card with a title and markdown content."""
-    icon_html = f"<span>{icon}</span>" if icon else ""
+    icon_html = _render_icon_html(icon) if icon else ""
     st.markdown(
         f"""
         <div class="ca-card">
@@ -95,10 +109,11 @@ def empty_state(
     description: str,
 ) -> None:
     """Render a centered empty-state panel."""
+    icon_html = _render_icon_html(icon)
     st.markdown(
         f"""
         <div class="ca-empty">
-            <div class="ca-empty-icon">{icon}</div>
+            <div class="ca-empty-icon">{icon_html}</div>
             <div class="ca-empty-title">{title}</div>
             <div>{description}</div>
         </div>
