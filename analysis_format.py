@@ -4,7 +4,7 @@ import re
 from typing import Dict, Optional
 
 SECTION_PATTERN = re.compile(
-    r"^###\s+\d+\.\s+(?P<title>[^\n]+)\n(?P<body>(?:.*\n?)*?)(?=\n###\s+\d+\.\s|\Z)",
+    r"^(?:###|##)\s+(?:\d+\.\s+)?(?P<title>[^\n]+)\n(?P<body>(?:.*\n?)*?)(?=(?:\n(?:###|##)\s+(?:\d+\.\s+)?)|\Z)",
     re.MULTILINE,
 )
 
