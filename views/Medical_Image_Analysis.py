@@ -29,6 +29,7 @@ def _init_session() -> None:
     """Initialize session state keys used by this page."""
     defaults = {
         "user_role": "clinician",
+        "user_language": "en",
         "additional_info": "",
         "analysis_results": {},
         "analysis_image_bytes": None,
@@ -93,7 +94,7 @@ def _resize_for_display(pil_image: PILImage.Image, max_width: int = 600) -> PILI
     return pil_image.resize((max_width, new_height))
 
 
-def _build_analysis_prompt(additional_info: str, role: str) -> str:
+def _build_analysis_prompt(additional_info: str, role: str, language: str) -> str:
     """Build the prompt sent to the medical imaging agent."""
     role_instruction = {
         "clinician": (
@@ -110,6 +111,11 @@ def _build_analysis_prompt(additional_info: str, role: str) -> str:
         ),
     }.get(role, "")
 
+    language_instruction = {
+        "de": "Answer in German.",
+        "en": "Answer in English.",
+    }.get(language, "Answer in the language of the user; if not specified, answer in English.")
+
     base = (
         "Analyze this medical image considering the following context: " + additional_info
         if additional_info
@@ -121,7 +127,7 @@ def _build_analysis_prompt(additional_info: str, role: str) -> str:
         f"{role_instruction}\n\n"
         f"{base}\n\n"
         "If you are not sure about the diagnosis, please provide a possible diagnosis. "
-        "Answer in the language of the user; if not specified, answer in English."
+        f"{language_instruction}"
     )
 
 
@@ -146,6 +152,7 @@ def _run_analysis(role: str, display_image: PILImage.Image) -> str:
     prompt = _build_analysis_prompt(
         st.session_state.additional_info,
         role,
+        st.session_state.user_language,
     )
     agent = _get_or_create_agent()
     response = agent.run(prompt, images=[agno_image])
@@ -198,10 +205,8 @@ def _render_consent() -> bool:
 
 
 def _render_prompt_templates() -> None:
-    """Render quick prompt chips and the additional context text area."""
+    """Render selectable quick prompts and a custom context text area."""
     prompt_templates = {
-        "Answer in English": "Answer in English.",
-        "Antworte auf Deutsch": "Antworte auf Deutsch.",
         "Radiology-style report": (
             "Provide a radiology-style report with:\n"
             "- Modality and study type (if apparent)\n"
@@ -222,24 +227,29 @@ def _render_prompt_templates() -> None:
         ),
     }
 
-    st.caption("Quick prompts")
-    cols = st.columns(len(prompt_templates))
-    for (label, text), col in zip(prompt_templates.items(), cols, strict=False):
-        with col:
-            if st.button(label, use_container_width=True, key=f"tpl_{label}"):
-                st.session_state.additional_info = text
-                st.rerun()
+    if "selected_prompts" not in st.session_state:
+        st.session_state.selected_prompts = []
 
-    current = st.session_state.additional_info or ""
-    st.text_area(
-        "Provide additional context about the image (e.g., patient history, symptoms)",
-        value=current,
-        placeholder="Enter any relevant information here...  e.g. Antworte auf Deutsch",
-        key="additional_info_input",
-        height=180,
+    selected = st.multiselect(
+        "Quick prompts (select one or more)",
+        options=list(prompt_templates.keys()),
+        default=st.session_state.selected_prompts,
+        key="selected_prompts",
     )
-    # Streamlit's key binding mutates the widget value; mirror it back to session state.
-    st.session_state.additional_info = st.session_state.additional_info_input
+
+    custom_context = st.text_area(
+        "Additional context (e.g., patient history, symptoms)",
+        value=st.session_state.get("custom_context", ""),
+        placeholder="Enter any relevant information here...",
+        key="custom_context_input",
+        height=120,
+    )
+    st.session_state.custom_context = custom_context
+
+    parts = [prompt_templates[label] for label in selected]
+    if custom_context.strip():
+        parts.append(custom_context.strip())
+    st.session_state.additional_info = "\n\n".join(parts)
     st.caption(f"{len(st.session_state.additional_info)} characters")
 
 
@@ -399,6 +409,16 @@ def main() -> None:
             key="role_selector",
         )
         st.session_state.user_role = selected_role.lower()
+
+        st.caption("Language")
+        selected_language = st.radio(
+            "Response language",
+            options=["English", "Deutsch"],
+            index=0 if st.session_state.user_language == "en" else 1,
+            key="language_selector",
+            label_visibility="collapsed",
+        )
+        st.session_state.user_language = "en" if selected_language == "English" else "de"
 
     upload_container = st.container()
     controls_container = st.container()
