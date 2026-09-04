@@ -5,8 +5,8 @@
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Demo](https://img.shields.io/badge/Demo-Live-orange.svg)
 
-> 🏥 **Multi-Agent Medical AI Platform**
-> Intelligent diagnostics, image analysis, and research insights through a secure, intuitive interface. Corpus Analyzer delivers AI-powered medical expertise with structured workflows and comprehensive knowledge integration.
+> 🏥 **Medical Image Analysis for Education & Second Opinions**
+> Upload an X-ray, MRI, CT, ultrasound, or DICOM image and receive a structured, AI-generated report tailored to clinicians, patients, or researchers.
 
 **Live Demo:** [corpus-analyzer.streamlit.app](https://corpus-analyzer.streamlit.app/)
 
@@ -14,30 +14,29 @@
 
 ## 🎯 Mission
 
-Transform medical diagnostics and second opinions through AI-driven analysis while maintaining the highest standards of patient privacy and clinical accuracy.
+Make medical imaging analysis more accessible and understandable through AI-powered, educational reports while keeping patient privacy and transparency front and center.
 
 ---
 
 ## ✨ Key Features
 
 ### 🩻 Medical Image Analysis
-- **Multi-modality Support**: X-ray, MRI, CT, Ultrasound analysis, images in various formats, mobile phone camera
-- **Structured Reporting**: Professional findings with technical assessment
-- **Patient-Friendly Explanations**: Clear communication of medical results
-- **Evidence-Based Context**: Literature-backed insights and recommendations
+- **Multi-modality Support**: X-ray, MRI, CT, ultrasound, and DICOM images
+- **Structured Reporting**: Technical assessment, findings, clinical interpretation, patient-friendly explanation, and references
+- **Role-Aware Reports**: Separate analyses for **Clinician**, **Patient**, and **Researcher** audiences
+- **Evidence-Based Context**: Optional online research quick prompt for literature-backed insights
 
 ### 🧠 AI Intelligence
-- **Medical Imaging Expert**: Specialized agent for radiological analysis
-- **Knowledge Integration**: Vector database with medical literature
-- **Real-time Streaming**: Interactive AI responses with tool transparency
-- **Session Management**: Persistent conversation memory and context
+- **Routed Medical Imaging Agent**: A local skill-based agent that selects the right prompt and tools for the request
+- **Web-Fetcher Tool**: Live page retrieval for up-to-date references (enabled by default, configurable)
+- **DICOM Anonymization**: Local clearing of common identifying metadata tags before analysis
 
 ### 🎨 User Experience
-- **Role-Aware Output**: Clinician, patient, and researcher views of the same analysis
-- **Modern Interface**: Clean, responsive design with light/dark themes
-- **Intuitive Workflow**: Step-by-step medical analysis process
-- **Feedback System**: User ratings and continuous improvement
-- **GitHub Integration**: Direct issue reporting and feature requests
+- **Quick Prompts**: Select one or more additive prompts (radiology style, red flags, patient-friendly, online research, patient context)
+- **Language Switch**: English / Deutsch response language
+- **Material Icons**: Clean, professional iconography throughout the interface
+- **Markdown & PDF Export**: Download reports for documentation or sharing
+- **Privacy-First Consent**: Explicit confirmation before sending image data to an AI provider
 
 ---
 
@@ -174,30 +173,35 @@ corpus-analyzer/
 
 | Component | Technology | Purpose |
 |-----------|------------|---------|
-| **Framework** | [Agno](https://github.com/agno-agi/agno) | AI agent orchestration |
+| **Agent Framework** | [Agno](https://github.com/agno-agi/agno) | AI agent orchestration |
+| **Agent Routing** | Local skill router + tool registry | Skill discovery, prompt composition, and tool injection |
 | **Frontend** | [Streamlit](https://streamlit.io/) | Web interface |
-| **AI Models** | OpenAI GPT (GPT-4o, GPT-5.4-mini, etc.) | Medical inference |
+| **AI Models** | OpenAI GPT (GPT-4o, GPT-4o-mini, etc.) | Medical inference |
 | **Image Processing** | Pillow, pydicom | DICOM and image handling |
+| **Web Research** | Local web-fetcher tool + httpx/trafilatura | Live page retrieval for references |
 | **Export** | markdown (required), fpdf2 (optional) | Markdown and optional PDF reports |
 | **Testing** | pytest, ruff | Code quality and regression tests |
 
 ---
 
-## 🩺 Medical Imaging Expert
+## 🩺 Medical Imaging Analysis
 
-The Phase 1 release includes a specialized Medical Imaging agent with capabilities:
-
-### Analysis Types
-- **X-Ray Analysis**: Chest, skeletal, abdominal imaging
-- **MRI Interpretation**: Neurological, musculoskeletal, abdominal studies
-- **CT Scan Review**: Trauma, oncology, vascular imaging
-- **Ultrasound Assessment**: Abdominal, cardiac, obstetric studies
+The medical imaging agent produces structured educational reports.
 
 ### Output Structure
-1. **Technical Assessment**: Image quality, protocol adequacy
-2. **Professional Analysis**: Detailed findings and measurements
-3. **Clinical Interpretation**: Patient-friendly explanation
-4. **Evidence Context**: Supporting literature and guidelines
+1. **Image Technical Assessment**: Modality, anatomical region, image quality
+2. **Professional Analysis**: Systematic anatomical review and findings
+3. **Clinical Interpretation**: Diagnosis, differential, confidence, follow-up
+4. **Patient Education**: Jargon-free explanation of what the findings mean
+5. **Evidence-Based Context**: References and guidelines (enhanced by the online research prompt)
+6. **Medical Disclaimer**: Reminder that this is for educational purposes only
+
+### Role-Aware Reports
+- **Clinician**: Concise, structured radiology terminology with differentials and follow-up
+- **Patient**: Plain-language explanation focused on meaning and next steps
+- **Researcher**: Technical depth, confidence discussion, and evidence-based references
+
+After analyzing in one role, switching roles offers a **Re-analyze** button to generate a fresh report for the new audience.
 
 ---
 
@@ -241,17 +245,11 @@ The Phase 1 release includes a specialized Medical Imaging agent with capabiliti
 
 ## 📊 Performance
 
-### Benchmarks
-- **Response Time**: <5 seconds for typical analysis
-- **Accuracy**: 94%+ on standard imaging datasets
-- **Uptime**: 99.9% availability on Streamlit Cloud
-- **Concurrent Users**: 50+ simultaneous sessions
-
-### Optimization Features
-- **Caching**: Knowledge base caching for faster responses
-- **Streaming**: Real-time response generation
-- **Memory Management**: Efficient session handling
-- **Resource Monitoring**: Built-in performance tracking
+### Behavior
+- **Response Time**: Depends on the selected OpenAI model and image size; typically a few seconds
+- **Caching**: Report export functions are cached per image/analysis pair
+- **Session Handling**: Uploaded images are kept in memory only for the current session
+- **No Persistent Storage**: The app does not persist uploaded images or reports by default
 
 ---
 

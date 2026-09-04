@@ -22,13 +22,24 @@ def main():
     section_header("How to use it")
     st.markdown(
         """
-        1. Go to **Analyze** and upload a medical image.
+        1. Go to **Analyze** and upload a medical image (JPG, PNG, or DICOM).
         2. Confirm that the image contains no patient-identifying information.
-        3. Optionally add context (symptoms, history, or the language you want).
-        4. Click **Analyze Image** and wait for the structured report.
-        5. Switch between **Clinician**, **Patient**, and **Researcher** views.
-        6. Download the report as Markdown or PDF.
+        3. Choose the response **language** (English or Deutsch) in the sidebar.
+        4. Select one or more **quick prompts** (e.g., radiology style, red flags, online research)
+           or type your own context.
+        5. Click **Analyze Image** and wait for the structured report.
+        6. Switch between **Clinician**, **Patient**, and **Researcher** views. Each mode generates
+           a report tailored for that audience; switching modes after an analysis offers a
+           **Re-analyze** button for the new role.
+        7. Download the report as Markdown or PDF.
         """
+    )
+
+    section_header("Research & references")
+    st.markdown(
+        "The **Online research** quick prompt asks the model to include current authoritative "
+        "references (for example PubMed, medical society guidelines, or clinical journal articles) "
+        "and cite them with URLs. Corpus Analyzer uses a local web-fetcher tool for live page retrieval."
     )
 
     section_header("Important")
