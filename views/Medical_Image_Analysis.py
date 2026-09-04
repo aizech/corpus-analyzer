@@ -27,16 +27,26 @@ ROLES = ["clinician", "patient", "researcher"]
 
 def _init_session() -> None:
     """Initialize session state keys used by this page."""
-    for key, default in {
+    defaults = {
         "user_role": "clinician",
         "additional_info": "",
-        "analysis_text": "",
+        "analysis_results": {},
         "analysis_image_bytes": None,
         "analysis_model": "",
         "analysis_context": "",
-    }.items():
+    }
+    # Migrate legacy single-analysis key to per-role storage.
+    if "analysis_text" in st.session_state and "analysis_results" not in st.session_state:
+        legacy_text = st.session_state.pop("analysis_text")
+        defaults["analysis_results"] = {"clinician": legacy_text} if legacy_text else {}
+    for key, default in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = default
+
+
+def _get_analysis_text(role: str) -> str:
+    """Return the analysis text stored for the given role, if any."""
+    return st.session_state.get("analysis_results", {}).get(role, "")
 
 
 def _get_or_create_agent():
@@ -85,22 +95,33 @@ def _resize_for_display(pil_image: PILImage.Image, max_width: int = 600) -> PILI
 
 def _build_analysis_prompt(additional_info: str, role: str) -> str:
     """Build the prompt sent to the medical imaging agent."""
+    role_instruction = {
+        "clinician": (
+            "You are writing for a qualified healthcare professional. "
+            "Use precise radiology terminology, structured findings, and keep the tone concise and clinical."
+        ),
+        "patient": (
+            "You are explaining the results to a patient with no medical background. "
+            "Use plain language, avoid jargon, and focus on what the findings mean and what to do next."
+        ),
+        "researcher": (
+            "You are writing for a medical researcher. Include technical detail, differential diagnoses, "
+            "confidence discussion, and evidence-based references where possible."
+        ),
+    }.get(role, "")
+
     base = (
         "Analyze this medical image considering the following context: " + additional_info
         if additional_info
         else "Analyze this medical image and provide detailed findings."
     )
-    role_instruction = {
-        "clinician": "Answer in a concise, professional radiology style suitable for a clinician.",
-        "patient": "Answer in plain, patient-friendly language. Avoid medical jargon and explain what the findings mean.",
-        "researcher": "Answer with technical depth and include references and differential considerations suitable for a researcher.",
-    }.get(role, "")
 
     return (
-        base
-        + "\n\nIf you are not sure about the diagnosis, please provide a possible diagnosis."
-        + "\n\nAnswer in the language of the user. If it is not given, answer English."
-        + f"\n\n{role_instruction}"
+        f"Role: {role.capitalize()}\n\n"
+        f"{role_instruction}\n\n"
+        f"{base}\n\n"
+        "If you are not sure about the diagnosis, please provide a possible diagnosis. "
+        "Answer in the language of the user; if not specified, answer in English."
     )
 
 
@@ -113,6 +134,28 @@ def _extract_response_text(response) -> str:
     if isinstance(response, dict) and "content" in response:
         return str(response["content"])
     return str(response)
+
+
+def _run_analysis(role: str, display_image: PILImage.Image) -> str:
+    """Run the medical imaging agent for the given role and return the text response."""
+    img_buf = io.BytesIO()
+    display_image.save(img_buf, format="PNG")
+    image_bytes = img_buf.getvalue()
+    agno_image = AgnoImage(content=image_bytes, format="png")
+
+    prompt = _build_analysis_prompt(
+        st.session_state.additional_info,
+        role,
+    )
+    agent = _get_or_create_agent()
+    response = agent.run(prompt, images=[agno_image])
+    analysis_text = _extract_response_text(response)
+
+    st.session_state["analysis_image_bytes"] = image_bytes
+    st.session_state["analysis_model"] = get_default_model_id()
+    st.session_state["analysis_context"] = st.session_state.additional_info
+    st.session_state["analysis_results"][role] = analysis_text
+    return analysis_text
 
 
 def _render_image_viewer(pil_image: PILImage.Image, display_image: PILImage.Image) -> None:
@@ -202,7 +245,7 @@ def _render_prompt_templates() -> None:
 
 def _render_results(role: str) -> None:
     """Render parsed analysis results according to the selected role."""
-    text = st.session_state.get("analysis_text", "")
+    text = _get_analysis_text(role)
     if not text:
         return
 
@@ -228,7 +271,7 @@ def _render_results(role: str) -> None:
     else:
         _render_clinician_view(sections, text)
 
-    _render_export_and_feedback()
+    _render_export_and_feedback(role)
 
 
 def _render_clinician_view(sections: dict, raw_text: str) -> None:
@@ -286,10 +329,10 @@ def _render_researcher_view(sections: dict, raw_text: str) -> None:
         st.markdown(raw_text)
 
 
-def _render_export_and_feedback() -> None:
+def _render_export_and_feedback(role: str) -> None:
     """Render download buttons and a quick rating widget."""
     image_bytes = st.session_state.get("analysis_image_bytes")
-    analysis_text = st.session_state.get("analysis_text", "")
+    analysis_text = _get_analysis_text(role)
     model_id = st.session_state.get("analysis_model", get_default_model_id())
     additional_context = st.session_state.get("analysis_context", "")
 
@@ -416,23 +459,7 @@ def main() -> None:
 
             with st.spinner(ANALYZE_SPINNER):
                 try:
-                    img_buf = io.BytesIO()
-                    display_image.save(img_buf, format="PNG")
-                    image_bytes = img_buf.getvalue()
-                    agno_image = AgnoImage(content=image_bytes, format="png")
-
-                    prompt = _build_analysis_prompt(
-                        st.session_state.additional_info,
-                        st.session_state.user_role,
-                    )
-                    agent = _get_or_create_agent()
-                    response = agent.run(prompt, images=[agno_image])
-                    analysis_text = _extract_response_text(response)
-
-                    st.session_state["analysis_image_bytes"] = image_bytes
-                    st.session_state["analysis_text"] = analysis_text
-                    st.session_state["analysis_model"] = get_default_model_id()
-                    st.session_state["analysis_context"] = st.session_state.additional_info
+                    _run_analysis(st.session_state.user_role, display_image)
                 except Exception:
                     st.error(
                         "Sorry, we could not analyze the image. Please try again or contact support."
@@ -446,7 +473,40 @@ def main() -> None:
                     logging.getLogger(__name__).exception("Image analysis failed")
                     return
 
-        _render_results(st.session_state.user_role)
+        role = st.session_state.user_role
+        if _get_analysis_text(role):
+            _render_results(role)
+        elif (
+            _get_analysis_text("clinician")
+            or _get_analysis_text("patient")
+            or _get_analysis_text("researcher")
+        ):
+            st.info(
+                f"Switching to **{role.capitalize()}** mode requires a new analysis tailored for that audience. "
+                "Click the button below to re-analyze."
+            )
+            if st.button(
+                f"Re-analyze as {role.capitalize()}",
+                icon=":material/refresh:",
+                type="primary",
+                use_container_width=True,
+            ):
+                with st.spinner(ANALYZE_SPINNER):
+                    try:
+                        _run_analysis(role, display_image)
+                    except Exception:
+                        st.error(
+                            "Sorry, we could not analyze the image. Please try again or contact support."
+                        )
+                        st.info(
+                            "If the problem persists, check that your OpenAI API key is valid "
+                            "and has access to the selected model."
+                        )
+                        import logging
+
+                        logging.getLogger(__name__).exception("Image analysis failed")
+                        return
+                st.rerun()
 
 
 main()
