@@ -217,6 +217,10 @@ def _render_prompt_templates() -> None:
         ),
         "Explain for patient": "Explain the findings in simple, patient-friendly language.",
         "Focus: red flags": "Focus on urgent findings / red flags and what to do next.",
+        "Online research": (
+            "Use online research (e.g., PubMed, medical journals, authoritative clinical references) "
+            "to add evidence-based context, cite 2-3 sources, and include URLs where available."
+        ),
         "Add patient context": (
             "Patient context:\n"
             "- Age: \n"
