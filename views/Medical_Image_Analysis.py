@@ -209,7 +209,7 @@ def _render_results(role: str) -> None:
     sections = parse_analysis_sections(text)
     confidence = confidence_level(text)
 
-    st.markdown("## :material/diagnosis: Analysis Results")
+    st.markdown("## :material/medical_services: Analysis Results")
     col1, col2 = st.columns([1, 6])
     with col1:
         role_badge(role)
@@ -261,9 +261,9 @@ def _render_clinician_view(sections: dict, raw_text: str) -> None:
 def _render_patient_view(sections: dict, raw_text: str) -> None:
     """Render a simplified patient-friendly view."""
     if "patient education" in sections:
-        card("What this means", sections["patient education"], icon=":material/info:")
+        card("What this means", sections["patient education"], icon="ℹ️")
     elif "clinical interpretation" in sections:
-        card("What this means", sections["clinical interpretation"], icon=":material/info:")
+        card("What this means", sections["clinical interpretation"], icon="ℹ️")
 
     if "clinical interpretation" in sections and "patient education" in sections:
         with st.expander("Clinical details", expanded=False):
@@ -303,7 +303,8 @@ def _render_export_and_feedback() -> None:
     col1, col2, col3 = st.columns([1, 1, 2])
     with col1:
         st.download_button(
-            label=":material/download: Download Markdown",
+            label="Download Markdown",
+            icon=":material/download:",
             data=md_content,
             file_name="corpus_analyzer_analysis.md",
             mime="text/markdown",
@@ -315,7 +316,8 @@ def _render_export_and_feedback() -> None:
                 image_bytes, analysis_text, model_id, additional_context
             )
             st.download_button(
-                label=":material/download: Download PDF",
+                label="Download PDF",
+                icon=":material/download:",
                 data=pdf_content,
                 file_name="corpus_analyzer_analysis.pdf",
                 mime="application/pdf",
@@ -361,7 +363,7 @@ def main() -> None:
 
     if uploaded_file is None:
         empty_state(
-            icon=":material/upload_file:",
+            icon="📤",
             title="Upload a medical image to begin",
             description="Corpus Analyzer uses AI to provide educational analysis of X-rays, "
             "MRI, CT, and ultrasound images.",
@@ -399,7 +401,8 @@ def main() -> None:
         _render_prompt_templates()
 
         analyze_button = st.button(
-            ":material/search: Analyze Image",
+            "Analyze Image",
+            icon=":material/search:",
             type="primary",
             use_container_width=True,
             disabled=not safe_to_send,

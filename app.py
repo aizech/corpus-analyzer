@@ -15,7 +15,7 @@ pages = [
     st.Page(
         "views/Medical_Image_Analysis.py",
         title="Analyze",
-        icon=":material/diagnosis:",
+        icon=":material/medical_services:",
     ),
     st.Page("views/Security.py", title="Security", icon=":material/security:"),
     st.Page("views/Feedback.py", title="Feedback", icon=":material/rate_review:"),

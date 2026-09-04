@@ -14,23 +14,23 @@ def main():
     card(
         title="Upload",
         content="Uploaded images (JPG/PNG) and DICOM files are received via Streamlit's file uploader and kept in memory.",
-        icon=":material/upload:",
+        icon="📤",
     )
     card(
         title="DICOM anonymization",
         content="If you upload a DICOM file (``.dcm``/``.dicom``), common identifying metadata tags are cleared locally before analysis. "
         "Burned-in annotations or text embedded in the image pixels are not removed.",
-        icon=":material/shield:",
+        icon="🛡️",
     )
     card(
         title="What is sent",
         content="Only your prompt text and the image bytes are sent to the configured AI provider (e.g., OpenAI) to generate an analysis.",
-        icon=":material/send:",
+        icon="📨",
     )
     card(
         title="What is not stored",
         content="The app does not write uploaded images to disk as part of analysis. Sessions are temporary.",
-        icon=":material/delete_forever:",
+        icon="🗑️",
     )
 
     section_header("Data retention at the AI provider")

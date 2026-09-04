@@ -61,7 +61,7 @@ def main():
             title="BETA mode active",
             content="No API key is required yet — this project is currently sponsored. "
             "If you want to use your own key, set ``OPENAI_API_KEY`` in your environment.",
-            icon=":material/verified:",
+            icon="✅",
         )
 
     section_header("Web Fetcher")
