@@ -8,6 +8,7 @@ from PIL import Image as PILImage
 from agents.medical_agent import create_medical_imaging_agent
 from analysis_format import confidence_level, parse_analysis_sections
 from analysis_prompt import build_analysis_prompt, build_anamnesis_text
+from config import config
 from export import PDF_EXPORT_AVAILABLE, cached_markdown_report, cached_pdf_report
 from image_loader import LoadedImage, load_camera_shot, load_images, resize_for_display
 from models import get_default_model_id
@@ -39,6 +40,7 @@ def _init_session() -> None:
         "photo_anamnesis": {},
         "privacy_strip_exif": True,
         "privacy_blur_faces": False,
+        "progress_tracking_consent": False,
         "selected_prompts": [],
         "custom_context": "",
     }
@@ -252,6 +254,26 @@ def _render_privacy_options() -> None:
     )
     if not blur_available:
         st.caption(format_text("privacy_blur_unavailable"))
+
+
+def _render_progress_tracking_consent() -> bool:
+    """Render the separate, explicit consent for progress tracking.
+
+    Returns whether progress tracking is consented. If the feature flag is
+    disabled, this always returns False so no snapshot UI is offered.
+    """
+    if not config.ENABLE_PROGRESS_TRACKING:
+        st.session_state.progress_tracking_consent = False
+        return False
+
+    st.markdown(f"**{format_text('progress_tracking_consent_title')}**")
+    st.markdown(format_text("progress_tracking_consent_text"))
+    st.session_state.progress_tracking_consent = st.checkbox(
+        format_text("progress_tracking_consent_checkbox"),
+        value=st.session_state.progress_tracking_consent,
+        key="progress_tracking_consent_checkbox",
+    )
+    return st.session_state.progress_tracking_consent
 
 
 def _render_prompt_templates() -> None:
@@ -627,6 +649,7 @@ def main() -> None:
 
         _render_privacy_options()
         safe_to_send = _render_consent()
+        _render_progress_tracking_consent()
         _render_anamnesis()
         _render_prompt_templates()
 

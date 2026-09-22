@@ -157,6 +157,19 @@ UI_TEXTS: Dict[str, Dict[str, str]] = {
         "en": "I confirm this upload and text contain no sensitive patient-identifying information",
         "de": "Ich bestätige, dass dieser Upload und Text keine sensiblen patientenbezogenen Daten enthalten",
     },
+    # Progress tracking consent
+    "progress_tracking_consent_title": {
+        "en": "Progress tracking consent",
+        "de": "Einwilligung zur Verlaufsverfolgung",
+    },
+    "progress_tracking_consent_text": {
+        "en": "Progress tracking stores photos and notes so you can compare them over time. This data is health information. It will be encrypted and stored locally or in your configured storage. You can delete it at any time.",
+        "de": "Die Verlaufsverfolgung speichert Fotos und Notizen, damit du sie über längere Zeit vergleichen kannst. Diese Daten sind Gesundheitsinformationen. Sie werden verschlüsselt und lokal oder in deinem konfigurierten Speicher abgelegt. Du kannst sie jederzeit löschen.",
+    },
+    "progress_tracking_consent_checkbox": {
+        "en": "I agree to store encrypted snapshots for progress tracking",
+        "de": "Ich stimme der Speicherung verschlüsselter Snapshots für die Verlaufsverfolgung zu",
+    },
     # Anamnesis
     "anamnesis_title": {"en": "About this photo / Anamnese", "de": "Zum Foto / Anamnese"},
     "anamnesis_since_when": {"en": "Since when?", "de": "Seit wann?"},
@@ -271,6 +284,14 @@ UI_TEXTS: Dict[str, Dict[str, str]] = {
     "security_openai_button": {
         "en": "OpenAI: How your data is used",
         "de": "OpenAI: Wie deine Daten verwendet werden",
+    },
+    "security_legal_gate_title": {
+        "en": "Legal gate for Phase 2",
+        "de": "Rechtliches Gate für Phase 2",
+    },
+    "security_legal_gate_text": {
+        "en": "Features such as progress tracking store health-related data and may change the regulatory classification of the product. They remain disabled until the legal and privacy review documented in `docs/legal-gate.md` is completed.",
+        "de": "Funktionen wie die Verlaufsverfolgung speichern gesundheitsbezogene Daten und können die regulatorische Einordnung des Produkts ändern. Sie bleiben deaktiviert, bis die in `docs/legal-gate.md` dokumentierte rechtliche und datenschutzrechtliche Prüfung abgeschlossen ist.",
     },
     "security_contact": {"en": "Contact", "de": "Kontakt"},
     "security_contact_text": {

@@ -282,6 +282,7 @@ Photograph a doctor's letter, lab report, or medication package. The document ex
 - **Anonymization:** local clearing of common identifying DICOM metadata and photo EXIF/GPS data before analysis. Face and tattoo masking is available as an experimental, opt-in feature.
 - **Progress tracking (planned):** strictly opt-in, stored encrypted, deletable at any time. The no-storage default stays the default.
 - **Data protection law:** health data is special-category data under **GDPR Art. 9**; the platform is designed for de-identified, educational use. HIPAA considerations apply for US contexts.
+- **Legal gate:** Phase 2 features such as progress tracking require a documented legal and privacy review before they can be enabled. See [`docs/legal-gate.md`](docs/legal-gate.md).
 - **Deployment:** optional on-premise / self-hosted deployment.
 
 ### Medical Disclaimer

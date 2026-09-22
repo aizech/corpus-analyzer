@@ -39,6 +39,12 @@ def main():
         icon=":material/delete_forever:",
     )
 
+    card(
+        title=format_text("security_legal_gate_title"),
+        content=format_text("security_legal_gate_text"),
+        icon=":material/gavel:",
+    )
+
     section_header(format_text("security_law_title"))
     st.markdown(format_text("security_law_text"))
 
