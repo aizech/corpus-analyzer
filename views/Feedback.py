@@ -7,6 +7,7 @@ from email.message import EmailMessage
 import streamlit as st
 
 from config import config
+from translations import format_text
 from ui import render_page_header, section_header
 
 
@@ -95,28 +96,25 @@ def _send_feedback_email(
 
 def main() -> None:
     render_page_header(
-        "Feedback",
-        subtitle="Share your thoughts",
+        format_text("feedback_title"),
+        subtitle=format_text("feedback_subtitle"),
     )
 
     repo_url = _get_secret("GITHUB_REPO_URL", config.GITHUB_REPO_URL)
 
-    section_header("Report bugs / request features")
+    section_header(format_text("feedback_report_title"))
 
     if repo_url:
         bug_url = f"{repo_url.rstrip('/')}/issues/new?template=bug_report.yml"
         feature_url = f"{repo_url.rstrip('/')}/issues/new?template=feature_request.yml"
         st.markdown(
-            f"- **Bug report**: [{bug_url}]({bug_url})\n"
-            f"- **Feature request**: [{feature_url}]({feature_url})"
+            f"- **{format_text('feedback_bug_report')}**: [{bug_url}]({bug_url})\n"
+            f"- **{format_text('feedback_feature_request')}**: [{feature_url}]({feature_url})"
         )
     else:
-        st.info(
-            "GitHub links are not configured. Set the environment variable ``GITHUB_REPO_URL`` "
-            "(e.g. https://github.com/<org>/<repo>) to enable one-click issue links."
-        )
+        st.info(format_text("feedback_no_repo"))
 
-    section_header("Rate the app")
+    section_header(format_text("feedback_rate_title"))
 
     with st.form("feedback_form"):
         rating_selected = st.feedback(
@@ -126,22 +124,22 @@ def main() -> None:
         rating = (rating_selected + 1) if rating_selected is not None else 5
 
         feedback = st.text_area(
-            "Your feedback",
-            placeholder="What worked well? What should be improved?",
+            format_text("feedback_text_label"),
+            placeholder=format_text("feedback_text_placeholder"),
             height=220,
         )
 
         col1, col2 = st.columns(2)
         with col1:
-            name = st.text_input("Name (optional)")
+            name = st.text_input(format_text("feedback_name_label"))
         with col2:
-            email = st.text_input("Email address (optional)")
+            email = st.text_input(format_text("feedback_email_label"))
 
-        submitted = st.form_submit_button("Send feedback", type="primary")
+        submitted = st.form_submit_button(format_text("feedback_submit"), type="primary")
 
     if submitted:
         if not feedback.strip():
-            st.error("Please enter some feedback before sending.")
+            st.error(format_text("feedback_missing"))
             return
 
         try:
@@ -152,14 +150,11 @@ def main() -> None:
                 email=email,
             )
         except Exception as e:
-            st.error(
-                "Could not send feedback email. Please check SMTP settings (SMTP_HOST, SMTP_PORT, "
-                "SMTP_FROM, SMTP_TO, SMTP_USERNAME, SMTP_PASSWORD, SMTP_USE_TLS)."
-            )
+            st.error(format_text("feedback_send_error"))
             st.exception(e)
             return
 
-        st.success("Thanks — your feedback was sent!")
+        st.success(format_text("feedback_thanks"))
 
 
 main()

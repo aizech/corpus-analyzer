@@ -7,6 +7,7 @@ from typing import Optional
 import streamlit as st
 
 from config import config
+from translations import _
 
 _CSS_PATH = Path(__file__).parent / "assets" / "custom.css"
 _MATERIAL_ICON_RE = re.compile(r":material/([a-z0-9_]+):")
@@ -59,20 +60,10 @@ def render_page_header(
 
 def render_sidebar_info() -> None:
     """Render the standard sidebar info and disclaimer."""
-    with st.sidebar, st.expander("Safety & Privacy", expanded=False):
-        st.info(
-            "This tool provides AI-powered analysis of medical imaging data using "
-            "advanced computer vision and radiological expertise."
-        )
-        st.warning(
-            "DISCLAIMER: This tool is for educational and informational purposes only. "
-            "All analyses should be reviewed by qualified healthcare professionals. "
-            "Do not make medical decisions based solely on this analysis."
-        )
-        st.info(
-            "DICOM files are anonymized locally (common identifying tags cleared) before analysis. "
-            "This does not remove burned-in annotations in pixel data."
-        )
+    with st.sidebar, st.expander(_("sidebar_safety_privacy"), expanded=False):
+        st.info(_("sidebar_analysis_description"))
+        st.warning(_("sidebar_disclaimer"))
+        st.info(_("sidebar_dicom_note"))
 
 
 def card(title: str, content: str, icon: Optional[str] = None) -> None:
@@ -129,8 +120,13 @@ def role_badge(role: str) -> None:
         "patient": "ca-badge-patient",
         "researcher": "ca-badge-researcher",
     }.get(role.lower(), "ca-badge-clinician")
+    role_label = {
+        "clinician": _("role_clinician"),
+        "patient": _("role_patient"),
+        "researcher": _("role_researcher"),
+    }.get(role.lower(), role.capitalize())
     st.markdown(
-        f'<span class="ca-badge {role_class}">{role.capitalize()} view</span>',
+        f'<span class="ca-badge {role_class}">{role_label} {_("role_view")}</span>',
         unsafe_allow_html=True,
     )
 
@@ -138,16 +134,16 @@ def role_badge(role: str) -> None:
 def workflow_steps() -> None:
     """Render the 3-step analysis workflow."""
     st.markdown(
-        """
+        f"""
         <div class="ca-workflow">
             <div class="ca-workflow-step">
-                <span class="number">1</span> Upload image
+                <span class="number">1</span> {_("workflow_step1")}
             </div>
             <div class="ca-workflow-step">
-                <span class="number">2</span> Confirm privacy
+                <span class="number">2</span> {_("workflow_step2")}
             </div>
             <div class="ca-workflow-step">
-                <span class="number">3</span> Get analysis
+                <span class="number">3</span> {_("workflow_step3")}
             </div>
         </div>
         """,

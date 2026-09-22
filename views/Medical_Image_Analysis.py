@@ -11,6 +11,7 @@ from export import PDF_EXPORT_AVAILABLE, cached_markdown_report, cached_pdf_repo
 from image_loader import LoadedImage, load_camera_shot, load_images, resize_for_display
 from models import get_default_model_id
 from photo_privacy import blur_faces_and_tattoos, strip_exif
+from translations import format_text
 from ui import (
     card,
     empty_state,
@@ -21,7 +22,6 @@ from ui import (
     workflow_steps,
 )
 
-ANALYZE_SPINNER = "Analyzing... Please wait."
 ROLES = ["clinician", "patient", "researcher"]
 
 
@@ -29,7 +29,7 @@ def _init_session() -> None:
     """Initialize session state keys used by this page."""
     defaults: Dict[str, object] = {
         "user_role": "clinician",
-        "user_language": "en",
+        "user_language": st.session_state.get("ui_language", "en"),
         "additional_info": "",
         "analysis_results": {},
         "analysis_images": [],  # list of {"bytes": bytes, "caption": str, "source": str}
@@ -51,12 +51,19 @@ def _init_session() -> None:
         legacy_bytes = st.session_state.pop("analysis_image_bytes")
         if legacy_bytes:
             defaults["analysis_images"] = [
-                {"bytes": legacy_bytes, "caption": "Uploaded image", "source": "upload"}
+                {
+                    "bytes": legacy_bytes,
+                    "caption": format_text("uploaded_image"),
+                    "source": "upload",
+                }
             ]
 
     for key, default in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = default
+
+    # Keep response language in sync with the global UI language.
+    st.session_state.user_language = st.session_state.get("ui_language", "en")
 
 
 def _get_analysis_text(role: str) -> str:
@@ -124,13 +131,13 @@ def _build_anamnesis_text() -> str:
 
     parts: List[str] = []
     mapping = {
-        "since_when": "Since when",
-        "has_changed": "Has it changed",
-        "itching": "Itching",
-        "bleeding": "Bleeding",
-        "pain": "Pain",
-        "size_approx": "Approximate size",
-        "additional_notes": "Additional notes",
+        "since_when": format_text("anamnesis_since_when"),
+        "has_changed": format_text("anamnesis_changed"),
+        "itching": format_text("anamnesis_itching"),
+        "bleeding": format_text("anamnesis_bleeding"),
+        "pain": format_text("anamnesis_pain"),
+        "size_approx": format_text("anamnesis_size"),
+        "additional_notes": format_text("anamnesis_notes"),
     }
     for key, label in mapping.items():
         value = anamnesis.get(key)
@@ -139,7 +146,7 @@ def _build_anamnesis_text() -> str:
 
     if not parts:
         return ""
-    return "Anamnesis:\n" + "\n".join(parts)
+    return f"{format_text('anamnesis_label')}:\n" + "\n".join(parts)
 
 
 def _build_analysis_prompt(additional_info: str, role: str, language: str) -> str:
@@ -230,15 +237,17 @@ def _render_image_gallery() -> None:
     if not images:
         return
 
-    st.markdown("**Selected images**")
+    st.markdown(f"**{format_text('selected_images')}**")
     cols = st.columns(min(len(images), 4))
     for idx, (col, item) in enumerate(zip(cols, images, strict=False)):
         with col:
             pil_image = PILImage.open(io.BytesIO(item["bytes"]))
             display = resize_for_display(pil_image, max_width=200)
             st.image(display, use_container_width=True)
-            st.caption(item.get("caption", f"Image {idx + 1}"))
-            if st.button("Remove", key=f"remove_image_{idx}", use_container_width=True):
+            st.caption(item.get("caption", f"{format_text('uploaded_image')} {idx + 1}"))
+            if st.button(
+                format_text("remove"), key=f"remove_image_{idx}", use_container_width=True
+            ):
                 st.session_state.analysis_images.pop(idx)
                 st.rerun()
 
@@ -246,29 +255,25 @@ def _render_image_gallery() -> None:
 def _render_consent() -> bool:
     """Render the privacy consent panel and return whether it is checked."""
     st.markdown(
-        """
+        f"""
         <div class="ca-consent">
-            <div class="ca-consent-title">Privacy confirmation required</div>
-            <div style="margin-bottom: 0.5rem;">Before analysis, please confirm:</div>
+            <div class="ca-consent-title">{format_text("consent_title")}</div>
+            <div style="margin-bottom: 0.5rem;">{format_text("consent_intro")}</div>
             <ul class="ca-consent-list">
-                <li>The image bytes will be sent to the selected AI provider.</li>
-                <li>Your prompt text will be sent to the selected AI provider.</li>
-                <li>DICOM metadata is anonymized locally and is not sent.</li>
-                <li>EXIF/GPS metadata is stripped from smartphone photos before sending.</li>
-                <li>Burned-in text/annotations inside the image pixels may still be visible.</li>
+                <li>{format_text("consent_item_1")}</li>
+                <li>{format_text("consent_item_2")}</li>
+                <li>{format_text("consent_item_3")}</li>
+                <li>{format_text("consent_item_4")}</li>
+                <li>{format_text("consent_item_5")}</li>
             </ul>
         </div>
         """,
         unsafe_allow_html=True,
     )
-    with st.expander("Why is this required?"):
-        st.write(
-            "Medical images and health photos may contain protected health information. "
-            "This confirmation helps ensure you do not accidentally send identifiable data "
-            "to an external AI service."
-        )
+    with st.expander(format_text("consent_why_title")):
+        st.write(format_text("consent_why_text"))
     return st.checkbox(
-        "I confirm this upload and text contain no sensitive patient-identifying information",
+        format_text("consent_checkbox"),
         value=False,
         key="privacy_consent",
     )
@@ -276,22 +281,18 @@ def _render_consent() -> bool:
 
 def _render_photo_guidance() -> None:
     """Display tips for taking useful smartphone health photos."""
-    st.info(
-        "**Photo tips:** Use good, even lighting. Keep the camera steady and in focus. "
-        "Include a coin or ruler as a scale if possible. Take one close-up and one overview photo. "
-        "Use a plain, neutral background."
-    )
+    st.info(format_text("photo_tips"))
 
 
 def _render_privacy_options() -> None:
     """Render privacy toggles for EXIF stripping and optional face/tattoo blurring."""
     st.session_state.privacy_strip_exif = st.checkbox(
-        "Remove EXIF/GPS metadata from photos before analysis",
+        format_text("privacy_strip_exif"),
         value=st.session_state.privacy_strip_exif,
         key="strip_exif_checkbox",
     )
     st.session_state.privacy_blur_faces = st.checkbox(
-        "Blur faces and tattoos (experimental, local processing; requires opencv-python)",
+        format_text("privacy_blur_faces"),
         value=st.session_state.privacy_blur_faces,
         key="blur_faces_checkbox",
     )
@@ -300,7 +301,7 @@ def _render_privacy_options() -> None:
 def _render_prompt_templates() -> None:
     """Render selectable quick prompts and a custom context text area."""
     prompt_templates = {
-        "Radiology-style report": (
+        format_text("quick_prompt_radiology"): (
             "Provide a radiology-style report with:\n"
             "- Modality and study type (if apparent)\n"
             "- Key findings\n"
@@ -308,16 +309,18 @@ def _render_prompt_templates() -> None:
             "- Recommended next steps\n"
             "Keep it concise."
         ),
-        "Explain for patient": "Explain the findings in simple, patient-friendly language.",
-        "Focus: red flags": (
+        format_text(
+            "quick_prompt_patient"
+        ): "Explain the findings in simple, patient-friendly language.",
+        format_text("quick_prompt_redflags"): (
             "Focus on urgent findings / red flags and what to do next. "
             "For skin or nail photos, mention any signs that should be checked by a doctor soon."
         ),
-        "Online research": (
+        format_text("quick_prompt_research"): (
             "Use online research (e.g., PubMed, medical journals, authoritative clinical references) "
             "to add evidence-based context, cite 2-3 sources, and include URLs where available."
         ),
-        "Add patient context": (
+        format_text("quick_prompt_context"): (
             "Patient context:\n"
             "- Age: \n"
             "- Sex: \n"
@@ -328,16 +331,16 @@ def _render_prompt_templates() -> None:
     }
 
     selected = st.multiselect(
-        "Quick prompts (select one or more)",
+        format_text("quick_prompts_label"),
         options=list(prompt_templates.keys()),
         default=st.session_state.selected_prompts,
         key="selected_prompts",
     )
 
     custom_context = st.text_area(
-        "Additional context (e.g., patient history, symptoms)",
+        format_text("additional_context_label"),
         value=st.session_state.get("custom_context", ""),
-        placeholder="Enter any relevant information here...",
+        placeholder=format_text("additional_context_placeholder"),
         key="custom_context_input",
         height=120,
     )
@@ -353,30 +356,44 @@ def _render_prompt_templates() -> None:
 def _render_anamnesis() -> None:
     """Render optional anamnesis fields."""
     anamnesis = st.session_state.get("photo_anamnesis", {})
-    with st.expander("About this photo / Anamnese (optional)", expanded=False):
+    with st.expander(
+        f"{format_text('anamnesis_title')} ({format_text('optional')})", expanded=False
+    ):
         col1, col2 = st.columns(2)
         with col1:
             anamnesis["since_when"] = st.text_input(
-                "Since when?", value=anamnesis.get("since_when", ""), key="anamnesis_since_when"
+                format_text("anamnesis_since_when"),
+                value=anamnesis.get("since_when", ""),
+                key="anamnesis_since_when",
             )
             anamnesis["has_changed"] = st.text_input(
-                "Has it changed?", value=anamnesis.get("has_changed", ""), key="anamnesis_changed"
+                format_text("anamnesis_changed"),
+                value=anamnesis.get("has_changed", ""),
+                key="anamnesis_changed",
             )
             anamnesis["size_approx"] = st.text_input(
-                "Approximate size", value=anamnesis.get("size_approx", ""), key="anamnesis_size"
+                format_text("anamnesis_size"),
+                value=anamnesis.get("size_approx", ""),
+                key="anamnesis_size",
             )
         with col2:
             anamnesis["itching"] = st.text_input(
-                "Itching?", value=anamnesis.get("itching", ""), key="anamnesis_itching"
+                format_text("anamnesis_itching"),
+                value=anamnesis.get("itching", ""),
+                key="anamnesis_itching",
             )
             anamnesis["bleeding"] = st.text_input(
-                "Bleeding?", value=anamnesis.get("bleeding", ""), key="anamnesis_bleeding"
+                format_text("anamnesis_bleeding"),
+                value=anamnesis.get("bleeding", ""),
+                key="anamnesis_bleeding",
             )
             anamnesis["pain"] = st.text_input(
-                "Pain?", value=anamnesis.get("pain", ""), key="anamnesis_pain"
+                format_text("anamnesis_pain"),
+                value=anamnesis.get("pain", ""),
+                key="anamnesis_pain",
             )
         anamnesis["additional_notes"] = st.text_area(
-            "Additional notes",
+            format_text("anamnesis_notes"),
             value=anamnesis.get("additional_notes", ""),
             key="anamnesis_notes",
             height=80,
@@ -388,13 +405,13 @@ def _render_results(role: str) -> None:
     """Render parsed analysis results according to the selected role."""
     text = _get_analysis_text(role)
     if not text.strip():
-        st.info("No analysis results available for this role yet.")
+        st.info(format_text("no_results_for_role"))
         return
 
     sections = parse_analysis_sections(text)
     confidence = confidence_level(text)
 
-    st.markdown("## :material/medical_services: Analysis Results")
+    st.markdown(f"## :material/medical_services: {format_text('analysis_results_title')}")
     col1, col2 = st.columns([1, 6])
     with col1:
         role_badge(role)
@@ -402,7 +419,7 @@ def _render_results(role: str) -> None:
         if confidence:
             badge_class = f"ca-badge-confidence-{confidence}"
             st.markdown(
-                f'<span class="ca-badge {badge_class}">Confidence: {confidence.capitalize()}</span>',
+                f'<span class="ca-badge {badge_class}">{format_text("confidence_label")}: {confidence.capitalize()}</span>',
                 unsafe_allow_html=True,
             )
 
@@ -430,7 +447,7 @@ def _render_clinician_view(sections: Dict[str, str], raw_text: str) -> None:
                 st.markdown(sections[key])
 
     if "patient education" in sections:
-        with st.expander("Patient Education", expanded=False):
+        with st.expander(format_text("patient_education"), expanded=False):
             st.markdown(sections["patient education"])
 
     if "medical disclaimer" in sections:
@@ -438,23 +455,26 @@ def _render_clinician_view(sections: Dict[str, str], raw_text: str) -> None:
 
     if "_raw" in sections:
         only_raw = list(sections.keys()) == ["_raw"]
-        with st.expander("Raw analysis", expanded=only_raw):
+        with st.expander(format_text("raw_analysis"), expanded=only_raw):
             st.markdown(sections["_raw"])
-        st.caption(
-            "Note: This analysis is generated by AI and should be reviewed by "
-            "a qualified healthcare professional."
-        )
+        st.caption(format_text("ai_review_note"))
 
 
 def _render_patient_view(sections: Dict[str, str], raw_text: str) -> None:
     """Render a simplified patient-friendly view."""
     if "patient education" in sections:
-        card("What this means", sections["patient education"], icon=":material/info:")
+        card(
+            format_text("patient_education"), sections["patient education"], icon=":material/info:"
+        )
     elif "clinical interpretation" in sections:
-        card("What this means", sections["clinical interpretation"], icon=":material/info:")
+        card(
+            format_text("patient_education"),
+            sections["clinical interpretation"],
+            icon=":material/info:",
+        )
 
     if "clinical interpretation" in sections and "patient education" in sections:
-        with st.expander("Clinical details", expanded=False):
+        with st.expander(format_text("clinical_details"), expanded=False):
             st.markdown(sections["clinical interpretation"])
 
     if "medical disclaimer" in sections:
@@ -462,7 +482,7 @@ def _render_patient_view(sections: Dict[str, str], raw_text: str) -> None:
 
     if "_raw" in sections:
         only_raw = list(sections.keys()) == ["_raw"]
-        with st.expander("Full analysis", expanded=only_raw):
+        with st.expander(format_text("full_analysis"), expanded=only_raw):
             st.markdown(sections["_raw"])
 
 
@@ -474,7 +494,7 @@ def _render_researcher_view(sections: Dict[str, str], raw_text: str) -> None:
             continue
         with st.expander(key.title(), expanded=True):
             st.markdown(body)
-    with st.expander("Raw response", expanded=not parsed_keys):
+    with st.expander(format_text("raw_response"), expanded=not parsed_keys):
         st.markdown(raw_text)
 
 
@@ -489,7 +509,7 @@ def _render_export_and_feedback(role: str) -> None:
         return
 
     st.markdown("---")
-    st.markdown("### Report actions")
+    st.markdown(f"### {format_text('report_actions_title')}")
 
     first_image_bytes = images[0]["bytes"]
     additional_image_bytes = [img["bytes"] for img in images[1:]] if len(images) > 1 else None
@@ -505,7 +525,7 @@ def _render_export_and_feedback(role: str) -> None:
     col1, col2, col3 = st.columns([1, 1, 2])
     with col1:
         st.download_button(
-            label="Download Markdown",
+            label=format_text("download_markdown"),
             icon=":material/download:",
             data=md_content,
             file_name="corpus_analyzer_analysis.md",
@@ -522,7 +542,7 @@ def _render_export_and_feedback(role: str) -> None:
                 additional_image_bytes=additional_image_bytes,
             )
             st.download_button(
-                label="Download PDF",
+                label=format_text("download_pdf"),
                 icon=":material/download:",
                 data=pdf_content,
                 file_name="corpus_analyzer_analysis.pdf",
@@ -530,7 +550,7 @@ def _render_export_and_feedback(role: str) -> None:
                 use_container_width=True,
             )
         else:
-            st.caption("PDF export disabled")
+            st.caption(format_text("pdf_disabled"))
     with col3:
         st.feedback("stars", key="analysis_rating")
 
@@ -538,32 +558,28 @@ def _render_export_and_feedback(role: str) -> None:
 def main() -> None:
     inject_custom_css()
     render_page_header(
-        "Analyze",
-        subtitle="Upload medical images, health photos, or photographed documents",
+        format_text("analyze_title"),
+        subtitle=format_text("analyze_subtitle"),
     )
     render_sidebar_info()
     _init_session()
 
     with st.sidebar:
         st.markdown("---")
-        st.caption("User mode")
+        st.caption(format_text("user_mode_label"))
+        role_labels = {
+            "clinician": format_text("role_clinician"),
+            "patient": format_text("role_patient"),
+            "researcher": format_text("role_researcher"),
+        }
         selected_role = st.radio(
-            "View results as",
-            options=[r.capitalize() for r in ROLES],
+            format_text("view_results_as"),
+            options=ROLES,
+            format_func=lambda r: role_labels[r],
             index=ROLES.index(st.session_state.user_role),
             key="role_selector",
         )
         st.session_state.user_role = selected_role.lower()
-
-        st.caption("Language")
-        selected_language = st.radio(
-            "Response language",
-            options=["English", "Deutsch"],
-            index=0 if st.session_state.user_language == "en" else 1,
-            key="language_selector",
-            label_visibility="collapsed",
-        )
-        st.session_state.user_language = "en" if selected_language == "English" else "de"
 
     upload_container = st.container()
     controls_container = st.container()
@@ -571,14 +587,14 @@ def main() -> None:
 
     # ----- Upload / camera section -----
     with upload_container:
-        tab_upload, tab_camera = st.tabs(["Upload files", "Take photos"])
+        tab_upload, tab_camera = st.tabs([format_text("tab_upload"), format_text("tab_camera")])
 
         with tab_upload:
             uploaded_files = st.file_uploader(
-                "Upload image(s)",
+                format_text("upload_label"),
                 type=["jpg", "jpeg", "png", "dicom", "dcm"],
                 accept_multiple_files=True,
-                help="Supported formats: JPG, JPEG, PNG, DICOM, DCM. You can upload several files.",
+                help=format_text("upload_help"),
                 label_visibility="collapsed",
             )
             if uploaded_files:
@@ -590,7 +606,7 @@ def main() -> None:
                     gallery_items.append(
                         {
                             "bytes": _pil_to_bytes(processed),
-                            "caption": item.original_name or "Uploaded image",
+                            "caption": item.original_name or format_text("uploaded_image"),
                             "source": item.source_type,
                         }
                     )
@@ -599,12 +615,14 @@ def main() -> None:
         with tab_camera:
             _render_photo_guidance()
             camera_input = st.camera_input(
-                "Take a photo",
+                format_text("camera_label"),
                 label_visibility="collapsed",
                 key="camera_input",
             )
             if camera_input and st.button(
-                "Add this photo to gallery", use_container_width=True, key="add_camera_photo"
+                format_text("add_photo_button"),
+                use_container_width=True,
+                key="add_camera_photo",
             ):
                 raw_loaded = load_camera_shot(camera_input.getvalue())
                 processed = _apply_privacy(raw_loaded.pil_image)
@@ -612,7 +630,7 @@ def main() -> None:
                     [
                         {
                             "bytes": _pil_to_bytes(processed),
-                            "caption": "Camera capture",
+                            "caption": format_text("camera_capture"),
                             "source": "camera",
                         }
                     ]
@@ -624,11 +642,8 @@ def main() -> None:
     if not loaded_images:
         empty_state(
             icon=":material/upload_file:",
-            title="Upload or capture images to begin",
-            description=(
-                "Corpus Analyzer uses AI to provide educational explanations of medical images, "
-                "smartphone health photos, and photographed documents."
-            ),
+            title=format_text("empty_state_title"),
+            description=format_text("empty_state_description"),
         )
         workflow_steps()
         return
@@ -637,19 +652,22 @@ def main() -> None:
         for img in loaded_images:
             resize_for_display(img.pil_image)
     except Exception as e:
-        st.error(f"Error processing image: {str(e)}")
-        st.info("Please upload valid JPG, PNG, or DICOM files and try again.")
+        st.error(f"{format_text('analysis_error')}: {str(e)}")
+        st.info(format_text("api_key_error"))
         return
 
     with controls_container:
         _render_image_gallery()
 
-        with st.expander("Image details", expanded=False):
+        with st.expander(format_text("image_details"), expanded=False):
             for idx, loaded in enumerate(loaded_images):
                 fmt, dims = _image_detail_strings(loaded)
-                st.write(f"**Image {idx + 1} — Format:** {fmt}, **Dimensions:** {dims}")
+                st.write(
+                    f"**{format_text('uploaded_image')} {idx + 1} — {format_text('format')}:** {fmt}, "
+                    f"**{format_text('dimensions')}:** {dims}"
+                )
                 if loaded.source_type == "dicom":
-                    st.write("DICOM metadata was anonymized locally before conversion.")
+                    st.write(format_text("dicom_anonymized_note"))
 
         _render_privacy_options()
         safe_to_send = _render_consent()
@@ -657,7 +675,7 @@ def main() -> None:
         _render_prompt_templates()
 
         analyze_button = st.button(
-            "Analyze",
+            format_text("analyze"),
             icon=":material/search:",
             type="primary",
             use_container_width=True,
@@ -667,22 +685,17 @@ def main() -> None:
     with analysis_container:
         if analyze_button:
             if not safe_to_send:
-                st.error("Please confirm the privacy statement before analyzing.")
+                st.error(format_text("consent_missing_error"))
                 return
 
-            with st.spinner(ANALYZE_SPINNER):
+            with st.spinner(format_text("analysis_spinner")):
                 try:
                     _run_analysis(
                         st.session_state.user_role, [img.pil_image for img in loaded_images]
                     )
                 except Exception:
-                    st.error(
-                        "Sorry, we could not analyze the image(s). Please try again or contact support."
-                    )
-                    st.info(
-                        "If the problem persists, check that your OpenAI API key is valid "
-                        "and has access to the selected model."
-                    )
+                    st.error(format_text("analysis_error"))
+                    st.info(format_text("api_key_error"))
                     import logging
 
                     logging.getLogger(__name__).exception("Image analysis failed")
@@ -692,27 +705,19 @@ def main() -> None:
         if _get_analysis_text(role):
             _render_results(role)
         elif any(_get_analysis_text(r) for r in ROLES):
-            st.info(
-                f"Switching to **{role.capitalize()}** mode requires a new analysis tailored for that audience. "
-                "Click the button below to re-analyze."
-            )
+            st.info(format_text("role_switch_info", role=role_labels[role]))
             if st.button(
-                f"Re-analyze as {role.capitalize()}",
+                format_text("reanalyze_as", role=role_labels[role]),
                 icon=":material/refresh:",
                 type="primary",
                 use_container_width=True,
             ):
-                with st.spinner(ANALYZE_SPINNER):
+                with st.spinner(format_text("analysis_spinner")):
                     try:
                         _run_analysis(role, [img.pil_image for img in loaded_images])
                     except Exception:
-                        st.error(
-                            "Sorry, we could not analyze the image(s). Please try again or contact support."
-                        )
-                        st.info(
-                            "If the problem persists, check that your OpenAI API key is valid "
-                            "and has access to the selected model."
-                        )
+                        st.error(format_text("analysis_error"))
+                        st.info(format_text("api_key_error"))
                         import logging
 
                         logging.getLogger(__name__).exception("Image analysis failed")
@@ -724,7 +729,7 @@ def _image_detail_strings(loaded: LoadedImage) -> tuple[str, str]:
     """Return (format, dimensions) strings for a loaded image."""
     if loaded.is_dicom:
         return "DICOM", f"{loaded.pil_image.size[0]} x {loaded.pil_image.size[1]} pixels"
-    extension = (loaded.original_name or "").split(".")[-1].upper() or "Image"
+    extension = (loaded.original_name or "").split(".")[-1].upper() or format_text("uploaded_image")
     return extension, f"{loaded.pil_image.size[0]} x {loaded.pil_image.size[1]} pixels"
 
 

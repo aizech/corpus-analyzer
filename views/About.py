@@ -3,61 +3,44 @@
 import streamlit as st
 
 from config import config
+from translations import format_text
 from ui import render_page_header, section_header
 
 
 def main():
     render_page_header(
-        "About",
-        subtitle="Corpus Analyzer",
+        format_text("about_title"),
+        subtitle=format_text("about_subtitle"),
     )
 
-    section_header("What Corpus Analyzer does")
-    st.markdown(
-        "Corpus Analyzer is an educational tool that helps you understand what your images and "
-        "documents show. Upload an X-ray, MRI, CT, ultrasound, or DICOM image; a smartphone photo "
-        "of a mole, nail, rash, or wound; or a photographed doctor's letter, lab report, or "
-        "medication package. You will receive a structured, AI-generated report tailored to your "
-        "role — patient, clinician, or researcher."
-    )
+    section_header(format_text("about_what_does"))
+    st.markdown(format_text("about_what_does_text"))
 
-    section_header("How to use it")
+    section_header(format_text("about_how_to_use"))
     st.markdown(
-        """
-        1. Go to **Analyze** and upload or capture one or more images or documents.
-        2. Confirm that the images contain no patient-identifying information.
-        3. Choose the response **language** (English or Deutsch) in the sidebar.
-        4. Select one or more **quick prompts** (e.g., radiology style, red flags, online research)
-           or type your own context.
-        5. Optionally fill in the **anamnesis** questions to give the model more context.
-        6. Click **Analyze** and wait for the structured report.
-        7. Switch between **Clinician**, **Patient**, and **Researcher** views. Each mode generates
-           a report tailored for that audience; switching modes after an analysis offers a
-           **Re-analyze** button for the new role.
-        8. Download the report as Markdown or PDF.
+        f"""
+        1. {format_text("about_step1")}
+        2. {format_text("about_step2")}
+        3. {format_text("about_step3")}
+        4. {format_text("about_step4")}
+        5. {format_text("about_step5")}
+        6. {format_text("about_step6")}
+        7. {format_text("about_step7")}
+        8. {format_text("about_step8")}
         """
     )
 
-    section_header("Research & references")
-    st.markdown(
-        "The **Online research** quick prompt asks the model to include current authoritative "
-        "references (for example PubMed, medical society guidelines, or clinical journal articles) "
-        "and cite them with URLs. Corpus Analyzer uses a local web-fetcher tool for live page retrieval."
-    )
+    section_header(format_text("about_research"))
+    st.markdown(format_text("about_research_text"))
 
-    section_header("Important")
-    st.warning(
-        "This tool is for educational and orientation purposes only. It is not CE-marked or "
-        "FDA-cleared for clinical decision-making. All analyses should be reviewed by qualified "
-        "healthcare professionals. Always consult a qualified healthcare provider for medical "
-        "advice, diagnosis, or treatment."
-    )
+    section_header(format_text("about_important"))
+    st.warning(format_text("about_important_warning"))
 
-    section_header("Resources")
+    section_header(format_text("about_resources"))
     st.markdown(
-        f"- [Report an issue]({config.GITHUB_REPO_URL}/issues)\n"
-        f"- [Request a feature]({config.GITHUB_REPO_URL}/issues)\n"
-        f"- [Security & Privacy](/Security)"
+        f"- [{format_text('about_report_issue')}]({config.GITHUB_REPO_URL}/issues)\n"
+        f"- [{format_text('about_request_feature')}]({config.GITHUB_REPO_URL}/issues)\n"
+        f"- [{format_text('about_security_privacy')}](/Security)"
     )
 
     st.markdown("---")

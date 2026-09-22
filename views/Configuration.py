@@ -3,21 +3,22 @@ import os
 import streamlit as st
 
 from models import MODEL_OPTIONS, get_default_model_key, set_default_model
+from translations import format_text
 from ui import card, render_page_header, section_header
 
 
 def main():
     render_page_header(
-        "Configuration",
-        subtitle="System settings",
+        format_text("configuration_title"),
+        subtitle=format_text("configuration_subtitle"),
     )
 
     is_cloud = os.environ.get("STREAMLIT_RUNTIME_ENV") == "cloud"
 
-    section_header("AI Model")
+    section_header(format_text("config_model_section"))
     current_default = get_default_model_key()
     selected_model_key = st.selectbox(
-        "Select a model",
+        format_text("config_select_model"),
         options=list(MODEL_OPTIONS.keys()),
         index=(
             list(MODEL_OPTIONS.keys()).index(current_default)
@@ -26,56 +27,50 @@ def main():
         ),
         key="model_selector_config",
     )
-    st.caption(f"Current default: {MODEL_OPTIONS[selected_model_key]}")
+    st.caption(f"{format_text('config_select_model')}: {MODEL_OPTIONS[selected_model_key]}")
 
-    if st.button("Save Model Configuration", type="primary"):
+    if st.button(format_text("config_save_model"), type="primary"):
         set_default_model(selected_model_key)
         st.session_state.medical_agent = None
-        st.success(f"Default model set to {selected_model_key}")
+        st.success(format_text("config_model_saved", model=selected_model_key))
 
-    section_header("API Key")
+    section_header(format_text("config_api_key_section"))
     if "api_keys" not in st.session_state:
         st.session_state.api_keys = {}
 
     if is_cloud:
-        st.warning(
-            "You're running this app online. Please enter your own API key below. "
-            "This key will be stored in your session and won't be saved permanently."
-        )
+        st.warning(format_text("config_cloud_warning"))
         default_key = st.session_state.api_keys.get("OPENAI_API_KEY", "")
         openai_api_key = st.text_input(
-            "Enter your OpenAI API Key",
+            format_text("config_api_key_input"),
             value=default_key,
             type="password",
-            help="Your OpenAI API key for accessing GPT models",
+            help=format_text("config_api_key_help"),
         )
         if openai_api_key:
             st.session_state.api_keys["OPENAI_API_KEY"] = openai_api_key
             os.environ["OPENAI_API_KEY"] = openai_api_key
-            if st.button("Apply API Key"):
-                st.success("API Key applied for this session!")
+            if st.button(format_text("save")):
+                st.success(format_text("config_api_key_applied"))
         else:
-            st.warning("Please enter your OpenAI API key to use this application.")
+            st.warning(format_text("config_api_key_missing"))
     else:
         card(
-            title="BETA mode active",
-            content="No API key is required yet — this project is currently sponsored. "
-            "If you want to use your own key, set ``OPENAI_API_KEY`` in your environment.",
+            title=format_text("config_beta_active"),
+            content=format_text("config_beta_text"),
             icon=":material/verified:",
         )
 
-    section_header("Web Fetcher")
+    section_header(format_text("config_web_fetcher_section"))
     web_fetcher_enabled = os.environ.get("ENABLE_WEB_FETCHER", "true").lower() in (
         "true",
         "1",
         "yes",
     )
     if web_fetcher_enabled:
-        st.success(
-            "Web fetcher is enabled. The medical agent can retrieve web pages and literature."
-        )
+        st.success(format_text("config_web_fetcher_enabled"))
     else:
-        st.info("Web fetcher is disabled. Set ``ENABLE_WEB_FETCHER=true`` to enable it.")
+        st.info(format_text("config_web_fetcher_disabled"))
 
 
 main()
