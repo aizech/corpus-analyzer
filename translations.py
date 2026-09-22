@@ -225,6 +225,18 @@ UI_TEXTS: Dict[str, Dict[str, str]] = {
         "en": "Comparison result",
         "de": "Vergleichsergebnis",
     },
+    "handover_export_title": {"en": "Doctor handover", "de": "Arzt-Übergabe"},
+    "handover_export_help": {
+        "en": "Export all snapshots shown below as a handover document for your doctor.",
+        "de": "Exportiere alle unten gezeigten Snapshots als Übergabedokument für deinen Arzt.",
+    },
+    "handover_markdown_button": {"en": "Markdown handover", "de": "Markdown-Übergabe"},
+    "handover_pdf_button": {"en": "PDF handover", "de": "PDF-Übergabe"},
+    "second_opinion_button": {"en": "Request second opinion", "de": "Second Opinion anfragen"},
+    "second_opinion_help": {
+        "en": "Open the configured second-opinion platform. No data is sent automatically.",
+        "de": "Öffnet die konfigurierte Second-Opinion-Plattform. Es werden keine Daten automatisch übertragen.",
+    },
     # Body map labels
     "body_site_label": {"en": "Body location", "de": "Körperstelle"},
     "body_front_head": {"en": "Head / face (front)", "de": "Kopf / Gesicht (vorne)"},

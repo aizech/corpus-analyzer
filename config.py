@@ -32,6 +32,9 @@ class Config:
         "yes",
     )
 
+    # Optional URL for a second-opinion service. When unset, the button is not shown.
+    SECOND_OPINION_URL = os.environ.get("SECOND_OPINION_URL", "")
+
     GITHUB_REPO_URL = "https://github.com/aizech/corpus-analyzer"
 
     THIS_DIR = Path(__file__).parent

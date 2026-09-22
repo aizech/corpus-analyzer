@@ -10,6 +10,7 @@ from PIL import Image as PILImage
 from agents.medical_agent import create_medical_imaging_agent
 from analysis_format import confidence_level, parse_analysis_sections
 from config import config
+from export import PDF_EXPORT_AVAILABLE, build_handover_markdown_report, build_handover_pdf_report
 from models import get_default_model_id
 from progress_prompt import build_comparison_prompt
 from storage.factory import get_storage_backend
@@ -162,6 +163,40 @@ def main() -> None:
 
     role = st.session_state.get("user_role", "patient")
     language = st.session_state.get("ui_language", "en")
+
+    # --- Handover export and second-opinion links ---
+    st.markdown("---")
+    section_header(format_text("handover_export_title"))
+    st.markdown(format_text("handover_export_help"))
+    handover_cols = st.columns(3)
+    sorted_snapshots = sorted(snapshots, key=lambda s: s.created_at)
+    with handover_cols[0]:
+        st.download_button(
+            format_text("handover_markdown_button"),
+            data=build_handover_markdown_report(sorted_snapshots, role=role, user_id=user_id),
+            file_name=f"corpus-analyzer-handover-{user_id[:8]}.md",
+            mime="text/markdown",
+            use_container_width=True,
+        )
+    with handover_cols[1]:
+        if PDF_EXPORT_AVAILABLE:
+            st.download_button(
+                format_text("handover_pdf_button"),
+                data=build_handover_pdf_report(sorted_snapshots, role=role, user_id=user_id),
+                file_name=f"corpus-analyzer-handover-{user_id[:8]}.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+            )
+    if config.SECOND_OPINION_URL:
+        with handover_cols[2]:
+            st.link_button(
+                format_text("second_opinion_button"),
+                config.SECOND_OPINION_URL,
+                help=format_text("second_opinion_help"),
+                use_container_width=True,
+            )
+
+    st.markdown("---")
 
     if st.button(format_text("progress_compare"), type="primary", use_container_width=True):
         with st.spinner(format_text("analysis_spinner")):
