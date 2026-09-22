@@ -185,6 +185,10 @@ UI_TEXTS: Dict[str, Dict[str, str]] = {
         "en": "Could not save snapshot. Check the storage configuration.",
         "de": "Snapshot konnte nicht gespeichert werden. Prüfe die Speicher-Konfiguration.",
     },
+    "snapshot_consent_missing": {
+        "en": "Snapshot saving requires recorded progress-tracking consent. Please re-confirm the consent checkbox.",
+        "de": "Das Speichern erfordert eine erfasste Einwilligung zur Verlaufsverfolgung. Bitte bestätige die Einwilligung erneut.",
+    },
     # Photo quality
     "photo_quality_title": {"en": "Photo quality tip", "de": "Foto-Qualitätshinweis"},
     # Progress view
@@ -221,6 +225,31 @@ UI_TEXTS: Dict[str, Dict[str, str]] = {
     "progress_not_enough_description": {
         "en": "Save at least two snapshots of this body area from the analysis page first.",
         "de": "Speichere mindestens zwei Snapshots dieser Körperregion auf der Analyse-Seite.",
+    },
+    "consent_management_title": {"en": "Consent management", "de": "Einwilligungs-Verwaltung"},
+    "consent_status_active": {
+        "en": "Progress tracking consent is active.",
+        "de": "Einwilligung zur Verlaufsverfolgung ist aktiv.",
+    },
+    "consent_status_inactive": {
+        "en": "No active progress tracking consent.",
+        "de": "Keine aktive Einwilligung zur Verlaufsverfolgung.",
+    },
+    "consent_withdraw_button": {
+        "en": "Withdraw progress tracking consent",
+        "de": "Einwilligung zur Verlaufsverfolgung widerrufen",
+    },
+    "consent_withdraw_help": {
+        "en": "This records a withdrawal. Existing snapshots will remain until you delete them manually.",
+        "de": "Dies erfasst einen Widerruf. Bestehende Snapshots bleiben erhalten, bis du sie manuell löschst.",
+    },
+    "consent_withdrawn": {
+        "en": "Consent withdrawn. Progress tracking is now disabled for this session.",
+        "de": "Einwilligung widerrufen. Die Verlaufsverfolgung ist für diese Sitzung jetzt deaktiviert.",
+    },
+    "consent_history_header": {
+        "en": "Consent history",
+        "de": "Einwilligungs-Verlauf",
     },
     "snapshot_summary": {"en": "Summary", "de": "Zusammenfassung"},
     "comparison_results_title": {

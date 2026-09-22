@@ -2,7 +2,7 @@
 
 import pytest
 
-from storage import AbstractStorage, InMemoryStorage, PhotoSnapshot, SnapshotTag
+from storage import AbstractStorage, ConsentRecord, InMemoryStorage, PhotoSnapshot, SnapshotTag
 
 
 def test_in_memory_storage_implements_abstract_storage():
@@ -115,3 +115,37 @@ def test_photo_snapshot_create_sets_timestamps():
     assert snapshot.body_site == "arm"
     assert snapshot.created_at is not None
     assert snapshot.snapshot_id
+
+
+def test_record_and_list_consent():
+    storage = InMemoryStorage()
+    record = ConsentRecord.create(
+        user_id="user-1",
+        scope="progress_tracking",
+        granted=True,
+        version="1.0",
+    )
+    storage.record_consent(record)
+    records = storage.list_consent_records("user-1", scope="progress_tracking")
+    assert len(records) == 1
+    assert records[0].granted is True
+
+
+def test_consent_withdrawal_returns_false():
+    storage = InMemoryStorage()
+    storage.record_consent(
+        ConsentRecord.create(
+            user_id="user-1", scope="progress_tracking", granted=True, version="1.0"
+        )
+    )
+    storage.record_consent(
+        ConsentRecord.create(
+            user_id="user-1", scope="progress_tracking", granted=False, version="1.0"
+        )
+    )
+    assert storage.is_consent_granted("user-1", "progress_tracking") is False
+
+
+def test_missing_consent_returns_false():
+    storage = InMemoryStorage()
+    assert storage.is_consent_granted("user-1", "progress_tracking") is False

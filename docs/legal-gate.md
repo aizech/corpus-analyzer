@@ -92,11 +92,14 @@ The appropriate basis is **explicit consent** (Art. 9(2)(a)).
 
 ### Checklist
 
-- [ ] Consent flow is separate from the analysis consent.
-- [ ] Consent is granular: users can agree to analysis **without** agreeing to
+- [x] Consent flow is separate from the analysis consent.
+- [x] Consent is granular: users can agree to analysis **without** agreeing to
       progress tracking.
-- [ ] Consent is recorded (timestamp, version, scope).
-- [ ] Users can withdraw consent and delete stored snapshots easily.
+- [x] Consent is recorded (timestamp, version, scope) via `ConsentRecord` in the
+      configured storage backend.
+- [x] Users can withdraw consent on the Progress page; the consent history is
+      retained, but the latest decision determines whether new snapshots can be
+      saved.
 
 ### Engineering guardrails
 
@@ -183,6 +186,8 @@ This script verifies that:
 10. Progress-tracking UI elements are gated by `ENABLE_PROGRESS_TRACKING`.
 11. The analysis prompt instructs the model to include a medical disclaimer.
 12. Every health-analysis skill has a safety-rules section.
+13. Progress-tracking consent is recorded as a `ConsentRecord` with timestamp,
+    scope, and version, and is checked before saving a snapshot.
 
 Status: implemented and passing. Run it as part of CI before enabling
 `ENABLE_PROGRESS_TRACKING` in production.

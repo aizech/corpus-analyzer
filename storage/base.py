@@ -8,11 +8,11 @@ privacy implications of persistent storage are clarified.
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from storage.models import PhotoSnapshot
+from storage.models import ConsentRecord, PhotoSnapshot
 
 
 class AbstractStorage(ABC):
-    """Storage backend contract for photo/document snapshots."""
+    """Storage backend contract for photo/document snapshots and consent records."""
 
     @abstractmethod
     def save_snapshot(self, snapshot: PhotoSnapshot) -> str:
@@ -35,3 +35,22 @@ class AbstractStorage(ABC):
     @abstractmethod
     def delete_snapshot(self, user_id: str, snapshot_id: str) -> None:
         """Delete a snapshot permanently."""
+
+    @abstractmethod
+    def record_consent(self, consent: ConsentRecord) -> str:
+        """Persist a consent decision and return its consent_id."""
+
+    @abstractmethod
+    def list_consent_records(
+        self,
+        user_id: str,
+        scope: Optional[str] = None,
+    ) -> List[ConsentRecord]:
+        """Return consent records for a user, newest first."""
+
+    def is_consent_granted(self, user_id: str, scope: str) -> bool:
+        """Return True if the most recent consent record for scope is granted."""
+        records = self.list_consent_records(user_id, scope=scope)
+        if not records:
+            return False
+        return records[0].granted

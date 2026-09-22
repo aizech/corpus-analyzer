@@ -1,5 +1,6 @@
 """Progress tracking view: compare saved snapshots over time."""
 
+import contextlib
 import io
 from typing import List
 from uuid import uuid4
@@ -14,7 +15,7 @@ from export import PDF_EXPORT_AVAILABLE, build_handover_markdown_report, build_h
 from models import get_default_model_id
 from progress_prompt import build_comparison_prompt
 from storage.factory import get_storage_backend
-from storage.models import PhotoSnapshot
+from storage.models import ConsentRecord, PhotoSnapshot
 from translations import format_text
 from ui import empty_state, render_page_header, section_header
 from ui.body_map import BODY_SITE_OPTIONS, body_site_label
@@ -89,6 +90,55 @@ def _render_results(text: str) -> None:
     st.warning(format_text("ai_review_note"))
 
 
+def _render_consent_management(backend, user_id: str) -> None:
+    """Display the current progress-tracking consent status and allow withdrawal."""
+    section_header(format_text("consent_management_title"))
+
+    try:
+        active = backend.is_consent_granted(user_id, "progress_tracking")
+    except Exception:
+        active = False
+
+    if active:
+        st.success(format_text("consent_status_active"))
+    else:
+        st.info(format_text("consent_status_inactive"))
+
+    if active and st.button(
+        format_text("consent_withdraw_button"),
+        help=format_text("consent_withdraw_help"),
+        key="withdraw_progress_consent",
+    ):
+        _withdraw_consent(backend, user_id)
+
+    records = []
+    with contextlib.suppress(Exception):
+        records = backend.list_consent_records(user_id, scope="progress_tracking")
+
+    if records:
+        with st.expander(format_text("consent_history_header"), expanded=False):
+            for record in records:
+                status = "✅ granted" if record.granted else "❌ withdrawn"
+                st.markdown(f"- {record.created_at.strftime('%Y-%m-%d %H:%M UTC')} — {status}")
+
+
+def _withdraw_consent(backend, user_id: str) -> None:
+    """Record a withdrawal of progress-tracking consent."""
+    try:
+        backend.record_consent(
+            ConsentRecord.create(
+                user_id=user_id,
+                scope="progress_tracking",
+                granted=False,
+                version="1.0",
+            )
+        )
+        st.session_state.progress_tracking_consent = False
+        st.success(format_text("consent_withdrawn"))
+    except Exception:
+        st.error(format_text("snapshot_save_error"))
+
+
 def main() -> None:
     render_page_header(
         format_text("progress_title"),
@@ -107,6 +157,8 @@ def main() -> None:
         st.error(format_text("progress_storage_error"))
         st.exception(e)
         return
+
+    _render_consent_management(backend, user_id)
 
     section_header(format_text("progress_select_site"))
     selected_site = st.selectbox(

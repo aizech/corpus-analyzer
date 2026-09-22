@@ -8,6 +8,6 @@ validation.
 
 from storage.base import AbstractStorage
 from storage.memory import InMemoryStorage
-from storage.models import PhotoSnapshot, SnapshotTag
+from storage.models import ConsentRecord, PhotoSnapshot, SnapshotTag
 
-__all__ = ["AbstractStorage", "InMemoryStorage", "PhotoSnapshot", "SnapshotTag"]
+__all__ = ["AbstractStorage", "InMemoryStorage", "PhotoSnapshot", "SnapshotTag", "ConsentRecord"]

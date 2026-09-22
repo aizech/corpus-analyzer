@@ -65,3 +65,37 @@ class PhotoSnapshot:
             tags=tags or [],
             metadata=metadata or {},
         )
+
+
+@dataclass
+class ConsentRecord:
+    """A recorded user consent decision.
+
+    Consent records are immutable once created. Withdrawing consent creates a
+    new record with ``granted=False`` so that the history of consent decisions is
+    preserved.
+    """
+
+    user_id: str
+    scope: str
+    granted: bool
+    created_at: datetime
+    version: str
+    consent_id: str = field(default_factory=lambda: str(uuid4()))
+
+    @classmethod
+    def create(
+        cls,
+        user_id: str,
+        scope: str,
+        granted: bool,
+        version: str = "1.0",
+    ) -> "ConsentRecord":
+        """Factory that stamps a new consent record with the current UTC time."""
+        return cls(
+            user_id=user_id,
+            scope=scope,
+            granted=granted,
+            created_at=datetime.now(timezone.utc),
+            version=version,
+        )

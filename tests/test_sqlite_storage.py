@@ -6,7 +6,7 @@ import tempfile
 import pytest
 from cryptography.fernet import Fernet
 
-from storage.models import PhotoSnapshot, SnapshotTag
+from storage.models import ConsentRecord, PhotoSnapshot, SnapshotTag
 from storage.sqlite_storage import EncryptedSQLiteStorage
 
 
@@ -161,3 +161,34 @@ def test_factory_returns_sqlite_when_path_set(monkeypatch):
         os.unlink(path)
         monkeypatch.delenv("SNAPSHOT_STORAGE_PATH", raising=False)
         monkeypatch.delenv("STORAGE_ENCRYPTION_KEY", raising=False)
+
+
+def test_record_and_list_consent():
+    key = _fresh_key()
+    storage = EncryptedSQLiteStorage(":memory:", key)
+    record = ConsentRecord.create(
+        user_id="user-1",
+        scope="progress_tracking",
+        granted=True,
+        version="1.0",
+    )
+    storage.record_consent(record)
+    records = storage.list_consent_records("user-1", scope="progress_tracking")
+    assert len(records) == 1
+    assert records[0].granted is True
+
+
+def test_consent_withdrawal_returns_false():
+    key = _fresh_key()
+    storage = EncryptedSQLiteStorage(":memory:", key)
+    storage.record_consent(
+        ConsentRecord.create(
+            user_id="user-1", scope="progress_tracking", granted=True, version="1.0"
+        )
+    )
+    storage.record_consent(
+        ConsentRecord.create(
+            user_id="user-1", scope="progress_tracking", granted=False, version="1.0"
+        )
+    )
+    assert storage.is_consent_granted("user-1", "progress_tracking") is False

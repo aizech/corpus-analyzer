@@ -17,6 +17,7 @@ from photo_privacy import blur_faces_and_tattoos, is_opencv_available, strip_exi
 from photo_quality import assess_image_quality, quality_warning_text
 from snapshot_builder import build_snapshot
 from storage.factory import get_storage_backend
+from storage.models import ConsentRecord
 from translations import format_text
 from ui import (
     card,
@@ -283,11 +284,29 @@ def _render_privacy_options() -> None:
         st.caption(format_text("privacy_blur_unavailable"))
 
 
+def _record_consent_decision(user_id: str, scope: str, granted: bool) -> None:
+    """Record the user's explicit consent decision in the configured storage."""
+    if not config.ENABLE_PROGRESS_TRACKING:
+        return
+    try:
+        storage = get_storage_backend()
+        consent = ConsentRecord.create(
+            user_id=user_id,
+            scope=scope,
+            granted=granted,
+            version="1.0",
+        )
+        storage.record_consent(consent)
+    except Exception:
+        # Consent recording must not break the analysis flow.
+        pass
+
+
 def _render_progress_tracking_consent() -> bool:
     """Render the separate, explicit consent for progress tracking.
 
-    Returns whether progress tracking is consented. If the feature flag is
-    disabled, this always returns False so no snapshot UI is offered.
+    Records or withdraws consent when the user toggles the checkbox. Returns
+    whether progress tracking is currently consented.
     """
     if not config.ENABLE_PROGRESS_TRACKING:
         st.session_state.progress_tracking_consent = False
@@ -295,12 +314,20 @@ def _render_progress_tracking_consent() -> bool:
 
     st.markdown(f"**{format_text('progress_tracking_consent_title')}**")
     st.markdown(format_text("progress_tracking_consent_text"))
+    previous = st.session_state.progress_tracking_consent
     st.session_state.progress_tracking_consent = st.checkbox(
         format_text("progress_tracking_consent_checkbox"),
-        value=st.session_state.progress_tracking_consent,
+        value=previous,
         key="progress_tracking_consent_checkbox",
     )
-    return st.session_state.progress_tracking_consent
+    current = st.session_state.progress_tracking_consent
+    if current != previous:
+        _record_consent_decision(
+            st.session_state.user_id,
+            "progress_tracking",
+            current,
+        )
+    return current
 
 
 def _render_prompt_templates() -> None:
@@ -505,7 +532,20 @@ def _render_researcher_view(sections: Dict[str, str], raw_text: str) -> None:
 
 def _render_save_snapshot() -> None:
     """Offer to save the current analysis as a snapshot for progress tracking."""
-    if not config.ENABLE_PROGRESS_TRACKING or not st.session_state.progress_tracking_consent:
+    if not config.ENABLE_PROGRESS_TRACKING:
+        return
+    if not st.session_state.progress_tracking_consent:
+        return
+
+    # Verify the latest recorded consent in storage as a defense-in-depth check.
+    try:
+        backend = get_storage_backend()
+        if not backend.is_consent_granted(st.session_state.user_id, "progress_tracking"):
+            st.warning(format_text("snapshot_consent_missing"))
+            return
+    except Exception:
+        # If consent cannot be verified, do not save health data.
+        st.warning(format_text("snapshot_consent_missing"))
         return
 
     st.markdown("---")
@@ -513,7 +553,6 @@ def _render_save_snapshot() -> None:
     st.markdown(format_text("snapshot_save_help"))
     if st.button(format_text("snapshot_save_button"), icon=":material/save:", key="save_snapshot"):
         try:
-            backend = get_storage_backend()
             snapshot = build_snapshot(
                 user_id=st.session_state.user_id,
                 images=st.session_state.analysis_images,

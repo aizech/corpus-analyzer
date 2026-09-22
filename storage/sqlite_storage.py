@@ -14,7 +14,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from storage.base import AbstractStorage
-from storage.models import PhotoSnapshot, SnapshotTag
+from storage.models import ConsentRecord, PhotoSnapshot, SnapshotTag
 
 
 def _get_fernet(key: str):
@@ -68,6 +68,21 @@ class EncryptedSQLiteStorage(AbstractStorage):
             )
             self._conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_snapshots_body_site ON snapshots (body_site)"
+            )
+            self._conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS consent_records (
+                    consent_id TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    scope TEXT NOT NULL,
+                    granted INTEGER NOT NULL,
+                    created_at TEXT NOT NULL,
+                    version TEXT NOT NULL
+                )
+                """
+            )
+            self._conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_consent_user_scope ON consent_records (user_id, scope)"
             )
 
     def _encrypt_text(self, value: Optional[str]) -> Optional[bytes]:
@@ -180,6 +195,59 @@ class EncryptedSQLiteStorage(AbstractStorage):
             )
         if cursor.rowcount == 0:
             raise KeyError(f"Snapshot {snapshot_id} not found for user {user_id}")
+
+    def record_consent(self, consent: ConsentRecord) -> str:
+        """Persist a consent decision and return its consent_id."""
+        consent_id = consent.consent_id or self._generate_id()
+        created_at = (
+            consent.created_at
+            if isinstance(consent.created_at, str)
+            else consent.created_at.isoformat()
+        )
+        with self._conn:
+            self._conn.execute(
+                """
+                INSERT INTO consent_records (
+                    consent_id, user_id, scope, granted, created_at, version
+                ) VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    consent_id,
+                    consent.user_id,
+                    consent.scope,
+                    1 if consent.granted else 0,
+                    created_at,
+                    consent.version,
+                ),
+            )
+        return consent_id
+
+    def list_consent_records(
+        self,
+        user_id: str,
+        scope: Optional[str] = None,
+    ) -> List[ConsentRecord]:
+        """Return consent records for a user, newest first."""
+        query = "SELECT * FROM consent_records WHERE user_id = ?"
+        params: List[object] = [user_id]
+        if scope is not None:
+            query += " AND scope = ?"
+            params.append(scope)
+        query += " ORDER BY created_at DESC"
+
+        self._conn.row_factory = sqlite3.Row
+        rows = self._conn.execute(query, params).fetchall()
+        return [
+            ConsentRecord(
+                consent_id=row["consent_id"],
+                user_id=row["user_id"],
+                scope=row["scope"],
+                granted=bool(row["granted"]),
+                created_at=datetime.fromisoformat(row["created_at"]),
+                version=row["version"],
+            )
+            for row in rows
+        ]
 
     @staticmethod
     def _generate_id() -> str:

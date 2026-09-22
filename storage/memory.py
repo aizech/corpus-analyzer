@@ -3,7 +3,7 @@
 from typing import Dict, List, Optional
 
 from storage.base import AbstractStorage
-from storage.models import PhotoSnapshot
+from storage.models import ConsentRecord, PhotoSnapshot
 
 
 class InMemoryStorage(AbstractStorage):
@@ -16,6 +16,7 @@ class InMemoryStorage(AbstractStorage):
 
     def __init__(self) -> None:
         self._store: Dict[str, Dict[str, PhotoSnapshot]] = {}
+        self._consents: Dict[str, List[ConsentRecord]] = {}
 
     def save_snapshot(self, snapshot: PhotoSnapshot) -> str:
         """Persist a snapshot and return its snapshot_id."""
@@ -54,3 +55,20 @@ class InMemoryStorage(AbstractStorage):
         user_store = self._store.get(user_id)
         if user_store and snapshot_id in user_store:
             del user_store[snapshot_id]
+
+    def record_consent(self, consent: ConsentRecord) -> str:
+        """Persist a consent decision and return its consent_id."""
+        user_consents = self._consents.setdefault(consent.user_id, [])
+        user_consents.append(consent)
+        return consent.consent_id
+
+    def list_consent_records(
+        self,
+        user_id: str,
+        scope: Optional[str] = None,
+    ) -> List[ConsentRecord]:
+        """Return consent records for a user, newest first."""
+        records = self._consents.get(user_id, [])
+        if scope is not None:
+            records = [r for r in records if r.scope == scope]
+        return sorted(records, key=lambda r: r.created_at, reverse=True)

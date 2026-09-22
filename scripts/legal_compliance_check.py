@@ -304,6 +304,17 @@ def check_analysis_prompt_has_disclaimer() -> list[str]:
     return errors
 
 
+def check_consent_is_recorded() -> list[str]:
+    """Verify the codebase records granular consent decisions."""
+    errors: list[str] = []
+    view_text = _read_text(REPO_ROOT / "views" / "Medical_Image_Analysis.py")
+    if "record_consent" not in view_text:
+        errors.append("Progress tracking consent is not recorded in storage")
+    if "ConsentRecord" not in view_text:
+        errors.append("ConsentRecord is not used when toggling progress tracking consent")
+    return errors
+
+
 def check_skills_have_safety_section() -> list[str]:
     """Verify health skills contain a safety rules section."""
     errors: list[str] = []
@@ -330,6 +341,7 @@ CHECKS = [
     ("Progress tracking gated in UI", check_progress_tracking_gate_in_ui),
     ("Analysis prompt has disclaimer", check_analysis_prompt_has_disclaimer),
     ("Skills have safety section", check_skills_have_safety_section),
+    ("Consent is recorded", check_consent_is_recorded),
 ]
 
 
