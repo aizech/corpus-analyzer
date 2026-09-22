@@ -161,7 +161,28 @@ Current understanding (must be verified against current OpenAI policy):
 
 ---
 
-## 9. Sign-off before enabling Phase 2
+## 9. Code-level verification
+
+Engineering should run the automated compliance check before each release:
+
+```bash
+python scripts/legal_compliance_check.py
+```
+
+This script verifies that:
+
+1. `ENABLE_PROGRESS_TRACKING` defaults to `false`.
+2. The progress-tracking consent is separate from the analysis consent.
+3. No traffic-light/triage language appears in skills or user-facing text.
+4. No definitive diagnosis or treatment claims appear in skill instructions.
+5. Encrypted storage requires an encryption key.
+6. No raw health images are written to logs.
+
+If any check fails, the gate must be re-evaluated before enabling Phase 2.
+
+---
+
+## 10. Sign-off before enabling Phase 2
 
 | Role | Name | Date | Status |
 |---|---|---|---|

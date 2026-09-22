@@ -318,8 +318,8 @@ def _render_prompt_templates() -> None:
             "quick_prompt_patient"
         ): "Explain the findings in simple, patient-friendly language.",
         format_text("quick_prompt_redflags"): (
-            "Focus on urgent findings / red flags and what to do next. "
-            "For skin or nail photos, mention any signs that should be checked by a doctor soon."
+            "Focus on findings that may be important to discuss with a doctor and what to do next. "
+            "For skin or nail photos, mention any signs that should be checked by a doctor."
         ),
         format_text("quick_prompt_research"): (
             "Use online research (e.g., PubMed, medical journals, authoritative clinical references) "
