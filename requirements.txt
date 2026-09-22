@@ -25,6 +25,7 @@ markdown==3.7
 python-dotenv==1.0.1
 pydantic==2.11.0
 PyYAML==6.0.2
+cryptography>=44.0,<45.0
 
 # Web fetching (for web-fetcher skill)
 httpx==0.28.1

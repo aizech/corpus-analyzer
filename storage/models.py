@@ -34,6 +34,7 @@ class PhotoSnapshot:
     body_site: Optional[str]
     anamnesis: Optional[str]
     analysis_summary: Optional[str]
+    encrypted_image: Optional[bytes] = None
     tags: List[SnapshotTag] = field(default_factory=list)
     metadata: Dict[str, str] = field(default_factory=dict)
     snapshot_id: str = field(default_factory=lambda: str(uuid4()))
@@ -47,6 +48,7 @@ class PhotoSnapshot:
         body_site: Optional[str] = None,
         anamnesis: Optional[str] = None,
         analysis_summary: Optional[str] = None,
+        encrypted_image: Optional[bytes] = None,
         tags: Optional[List[SnapshotTag]] = None,
         metadata: Optional[Dict[str, str]] = None,
     ) -> "PhotoSnapshot":
@@ -59,6 +61,7 @@ class PhotoSnapshot:
             body_site=body_site,
             anamnesis=anamnesis,
             analysis_summary=analysis_summary,
+            encrypted_image=encrypted_image,
             tags=tags or [],
             metadata=metadata or {},
         )
