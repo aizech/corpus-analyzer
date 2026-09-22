@@ -34,12 +34,19 @@ with st.sidebar:
         set_language(selected_ui_language)
         st.rerun()
 
+progress_page = st.Page(
+    "views/Progress.py",
+    title=_("page_progress"),
+    icon=":material/history:",
+)
+
 pages = [
     st.Page(
         "views/Medical_Image_Analysis.py",
         title=_("page_analyze"),
         icon=":material/medical_services:",
     ),
+    progress_page,
     st.Page("views/Security.py", title=_("page_security"), icon=":material/security:"),
     st.Page("views/Feedback.py", title=_("page_feedback"), icon=":material/rate_review:"),
     st.Page(

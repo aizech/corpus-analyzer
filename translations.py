@@ -15,6 +15,7 @@ UI_TEXTS: Dict[str, Dict[str, str]] = {
     "page_security": {"en": "Security", "de": "Sicherheit"},
     "page_feedback": {"en": "Feedback", "de": "Feedback"},
     "page_configuration": {"en": "Configuration", "de": "Einstellungen"},
+    "page_progress": {"en": "Progress", "de": "Verlauf"},
     "page_about": {"en": "About", "de": "Über"},
     # Language selector
     "language_label": {"en": "Language", "de": "Sprache"},
@@ -183,6 +184,46 @@ UI_TEXTS: Dict[str, Dict[str, str]] = {
     "snapshot_save_error": {
         "en": "Could not save snapshot. Check the storage configuration.",
         "de": "Snapshot konnte nicht gespeichert werden. Prüfe die Speicher-Konfiguration.",
+    },
+    # Progress view
+    "progress_title": {"en": "Progress Tracking", "de": "Verlaufsverfolgung"},
+    "progress_subtitle": {
+        "en": "Compare photos of the same body area over time.",
+        "de": "Vergleiche Fotos derselben Körperregion über längere Zeit.",
+    },
+    "progress_disabled": {
+        "en": "Progress tracking is not enabled in this deployment.",
+        "de": "Die Verlaufsverfolgung ist in diesem Deployment nicht aktiviert.",
+    },
+    "progress_storage_error": {
+        "en": "Could not initialize snapshot storage.",
+        "de": "Snapshot-Speicher konnte nicht initialisiert werden.",
+    },
+    "progress_select_site": {"en": "Select body site", "de": "Körperregion wählen"},
+    "progress_select_snapshots": {"en": "Select snapshots", "de": "Snapshots auswählen"},
+    "progress_select_two": {
+        "en": "Choose two snapshots of the selected body area to compare.",
+        "de": "Wähle zwei Snapshots der ausgewählten Körperregion zum Vergleich.",
+    },
+    "progress_earlier": {"en": "Earlier snapshot", "de": "Früherer Snapshot"},
+    "progress_later": {"en": "Later snapshot", "de": "Späterer Snapshot"},
+    "progress_compare": {"en": "Compare snapshots", "de": "Snapshots vergleichen"},
+    "progress_same_snapshot": {
+        "en": "Please select two different snapshots.",
+        "de": "Bitte wähle zwei unterschiedliche Snapshots.",
+    },
+    "progress_not_enough_title": {
+        "en": "Not enough snapshots",
+        "de": "Nicht genügend Snapshots",
+    },
+    "progress_not_enough_description": {
+        "en": "Save at least two snapshots of this body area from the analysis page first.",
+        "de": "Speichere mindestens zwei Snapshots dieser Körperregion auf der Analyse-Seite.",
+    },
+    "snapshot_summary": {"en": "Summary", "de": "Zusammenfassung"},
+    "comparison_results_title": {
+        "en": "Comparison result",
+        "de": "Vergleichsergebnis",
     },
     # Body map labels
     "body_site_label": {"en": "Body location", "de": "Körperstelle"},
