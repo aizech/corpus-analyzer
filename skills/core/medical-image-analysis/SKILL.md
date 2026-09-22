@@ -81,6 +81,15 @@ Using OpenAI web search:
 - Technological advances in imaging/treatment
 - 2-3 authoritative medical references
 
+## Safety rules
+
+- This tool provides educational orientation only and is not a medical diagnosis.
+- Do not present any finding as a definitive diagnosis or treatment recommendation.
+- Use cautious, probability-based language such as "may suggest", "could represent", or
+  "cannot be excluded".
+- If the image is insufficient or you are uncertain, state that explicitly and explain why.
+- Always include the medical disclaimer at the end of the response.
+
 ### 6. Medical Disclaimer
 Always end with: "This analysis is for educational and demonstration purposes only. All medical imaging should be reviewed by qualified healthcare professionals for clinical decision-making."
 

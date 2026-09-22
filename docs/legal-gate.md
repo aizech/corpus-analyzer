@@ -177,12 +177,92 @@ This script verifies that:
 4. No definitive diagnosis or treatment claims appear in skill instructions.
 5. Encrypted storage requires an encryption key.
 6. No raw health images are written to logs.
+7. All environment variables used in `config.py` are documented in `.env.example`.
+8. No obvious hardcoded secrets exist in project Python files.
+9. No `print` statements are used in `views/` (which could leak data to stdout).
+10. Progress-tracking UI elements are gated by `ENABLE_PROGRESS_TRACKING`.
+11. The analysis prompt instructs the model to include a medical disclaimer.
+12. Every health-analysis skill has a safety-rules section.
+
+Status: implemented and passing. Run it as part of CI before enabling
+`ENABLE_PROGRESS_TRACKING` in production.
 
 If any check fails, the gate must be re-evaluated before enabling Phase 2.
 
 ---
 
-## 10. Sign-off before enabling Phase 2
+## 10. Organizational measures
+
+Beyond code checks, the following organizational measures should be in place
+before Phase 2 is enabled:
+
+### 10.1 Legal review workflow
+
+- **Trigger:** Any PR that changes progress tracking, storage, consent, skill
+  instructions, or user-facing medical claims must be reviewed by
+  legal/compliance before merge.
+- **Artifacts:** Legal review comments are stored in the PR; a final sign-off
+  is recorded in this document (Section 11).
+- **Fallback:** If no legal counsel is available, the PR must not enable
+  `ENABLE_PROGRESS_TRACKING` by default and must keep all new features behind
+  the flag.
+
+### 10.2 Data Protection Impact Assessment (DPIA)
+
+- [ ] Document the data flows for health photos, snapshots, and AI provider
+      submissions.
+- [ ] Identify risks to data subjects and mitigations (encryption, opt-in,
+      deletion, minimization).
+- [ ] Record the legal basis for each processing activity.
+- [ ] If required by local law, submit the DPIA to the supervisory authority.
+
+### 10.3 AI provider governance
+
+- [ ] Keep a copy of the current OpenAI API Terms of Use and Data Processing
+      Addendum.
+- [ ] Review them quarterly or after any service-change notification.
+- [ ] Document the selected model provider and region in the deployment
+      runbook.
+- [ ] Maintain an opt-out / no-train confirmation log if available from the
+      provider.
+
+### 10.4 Incident response
+
+- [ ] Define what constitutes a privacy/security incident for health data.
+- [ ] Document who must be notified (DPO, legal, affected users, supervisory
+      authority) and within what timeframe.
+- [ ] Prepare a containment playbook: disable progress tracking, rotate
+      encryption keys, preserve evidence.
+
+### 10.5 User-facing transparency
+
+- [ ] Privacy policy is updated to cover Phase 2 features.
+- [ ] Terms of use clearly state that Corpus Analyzer is not a diagnostic or
+      triage service.
+- [ ] Consent records can be exported or deleted on request.
+- [ ] A simple "delete all my snapshots" flow is available and tested.
+
+### 10.6 Training and awareness
+
+- [ ] Anyone with merge rights to `main` has read this gate document.
+- [ ] Marketing/copy review includes a check against triage and diagnosis
+      claims.
+- [ ] Customer support knows how to handle requests for data deletion and
+      consent withdrawal.
+
+### 10.7 Release checklist
+
+Before each release that touches health-data features:
+
+1. Run `python scripts/legal_compliance_check.py`.
+2. Run the full test suite: `pytest tests/`.
+3. Review all new or changed skill instructions for diagnosis/triage language.
+4. Verify the default `.env.example` values keep progress tracking disabled.
+5. Confirm sign-off table is up to date (Section 11).
+
+---
+
+## 11. Sign-off before enabling Phase 2
 
 | Role | Name | Date | Status |
 |---|---|---|---|

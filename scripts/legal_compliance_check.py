@@ -221,6 +221,102 @@ def check_no_raw_image_logging() -> list[str]:
     return errors
 
 
+def check_env_example_is_complete() -> list[str]:
+    """Verify .env.example documents the environment variables used in config.py."""
+    errors: list[str] = []
+    config_text = _read_text(REPO_ROOT / "config.py")
+    env_example_text = _read_text(REPO_ROOT / ".env.example")
+    # Find os.environ.get("VAR_NAME", ...) or os.environ["VAR_NAME"] usages.
+    env_vars = set(
+        re.findall(r'os\.environ\.(?:get\(|\[)["\']([A-Z_][A-Z0-9_]*)["\']', config_text)
+    )
+    for var in env_vars:
+        if var not in env_example_text:
+            errors.append(f"Environment variable {var} is missing from .env.example")
+    return errors
+
+
+def check_no_hardcoded_secrets() -> list[str]:
+    """Flag obvious hardcoded API keys or secrets in project Python files."""
+    errors: list[str] = []
+    secret_patterns = [
+        r'["\']sk-[a-zA-Z0-9]{20,}["\']',
+        r'["\']pk_[a-zA-Z0-9]{20,}["\']',
+        r'["\']Bearer\s+[a-zA-Z0-9_-]{20,}["\']',
+        r'["\']gh[pousr]_[a-zA-Z0-9_]{20,}["\']',
+        r'["\']AKIA[0-9A-Z]{16}["\']',
+    ]
+    for py_path in PROJECT_PYTHON_GLOB:
+        text = _read_text(py_path)
+        for pattern in secret_patterns:
+            for match in re.finditer(pattern, text):
+                line = text[: match.start()].count("\n") + 1
+                errors.append(
+                    f"Possible hardcoded secret in {py_path.relative_to(REPO_ROOT)}:{line}"
+                )
+    return errors
+
+
+def check_no_print_in_views() -> list[str]:
+    """Views should use st.write / logger, not print, to avoid leaking data."""
+    errors: list[str] = []
+    for py_path in (REPO_ROOT / "views").rglob("*.py"):
+        text = _read_text(py_path)
+        for match in re.finditer(r"\bprint\s*\(", text):
+            line = text[: match.start()].count("\n") + 1
+            errors.append(
+                f"Use logger or st.write instead of print in {py_path.relative_to(REPO_ROOT)}:{line}"
+            )
+    return errors
+
+
+def check_progress_tracking_gate_in_ui() -> list[str]:
+    """Verify progress tracking UI elements are gated by the feature flag."""
+    errors: list[str] = []
+    progress_view = _read_text(REPO_ROOT / "views" / "Progress.py")
+    if "if not config.ENABLE_PROGRESS_TRACKING:" not in progress_view:
+        errors.append("Progress.py does not guard against ENABLE_PROGRESS_TRACKING")
+
+    analysis_view = _read_text(REPO_ROOT / "views" / "Medical_Image_Analysis.py")
+    if "config.ENABLE_PROGRESS_TRACKING" not in analysis_view:
+        errors.append("Medical_Image_Analysis.py does not reference ENABLE_PROGRESS_TRACKING")
+    if (
+        "_render_save_snapshot" in analysis_view
+        and "progress_tracking_consent" not in analysis_view
+    ):
+        errors.append("Save-snapshot UI may not be gated by consent")
+    return errors
+
+
+def check_analysis_prompt_has_disclaimer() -> list[str]:
+    """Verify the analysis prompt instructs the model to include a medical disclaimer."""
+    errors: list[str] = []
+    prompt_text = _read_text(REPO_ROOT / "analysis_prompt.py").lower()
+    if "disclaimer" not in prompt_text:
+        errors.append("analysis_prompt.py does not mention a medical disclaimer")
+    diagnosis_disclaimers = [
+        "not a diagnosis",
+        "does not diagnose",
+        "does not provide a medical diagnosis",
+    ]
+    if not any(phrase in prompt_text for phrase in diagnosis_disclaimers):
+        errors.append("analysis_prompt.py does not clearly forbid diagnosis")
+    return errors
+
+
+def check_skills_have_safety_section() -> list[str]:
+    """Verify health skills contain a safety rules section."""
+    errors: list[str] = []
+    skill_dir = REPO_ROOT / "skills"
+    for skill_path in skill_dir.rglob("SKILL.md"):
+        if skill_path.parent.name == "web-fetcher":
+            continue
+        text = _read_text(skill_path).lower()
+        if "## safety" not in text and "safety rules" not in text:
+            errors.append(f"Skill {skill_path.relative_to(REPO_ROOT)} is missing a safety section")
+    return errors
+
+
 CHECKS = [
     ("Progress tracking disabled by default", check_progress_tracking_disabled_by_default),
     ("Storage requires encryption key", check_storage_requires_encryption_key),
@@ -228,6 +324,12 @@ CHECKS = [
     ("Skills disclaim diagnosis", check_skills_avoid_diagnosis_claims),
     ("Progress consent is separate", check_progress_consent_is_separate),
     ("No raw image logging", check_no_raw_image_logging),
+    ("Environment variables documented", check_env_example_is_complete),
+    ("No hardcoded secrets", check_no_hardcoded_secrets),
+    ("No print statements in views", check_no_print_in_views),
+    ("Progress tracking gated in UI", check_progress_tracking_gate_in_ui),
+    ("Analysis prompt has disclaimer", check_analysis_prompt_has_disclaimer),
+    ("Skills have safety section", check_skills_have_safety_section),
 ]
 
 

@@ -77,3 +77,14 @@ def test_build_analysis_prompt_requests_uncertainty_language():
     )
     assert "If you are not sure about what you see, please say so rather than guessing" in prompt
     assert "I cannot assess it" not in prompt  # phrasing is in the instruction
+
+
+def test_build_analysis_prompt_includes_medical_disclaimer():
+    prompt = build_analysis_prompt(
+        additional_info="",
+        role="patient",
+        language="en",
+    )
+    assert "does not provide a medical diagnosis" in prompt
+    assert "treatment recommendation" in prompt
+    assert "qualified healthcare professional" in prompt
