@@ -1,7 +1,5 @@
 """Tests for the UI translation helpers."""
 
-import pytest
-
 import translations
 from translations import UI_TEXTS, format_text, get_language, set_language
 
