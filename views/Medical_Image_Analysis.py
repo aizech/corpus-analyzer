@@ -23,6 +23,7 @@ from ui import (
     role_badge,
     workflow_steps,
 )
+from ui.body_map import select_body_site
 
 ROLES = ["clinician", "patient", "researcher"]
 
@@ -41,6 +42,7 @@ def _init_session() -> None:
         "privacy_strip_exif": True,
         "privacy_blur_faces": False,
         "progress_tracking_consent": False,
+        "body_site": "",
         "selected_prompts": [],
         "custom_context": "",
     }
@@ -649,7 +651,12 @@ def main() -> None:
 
         _render_privacy_options()
         safe_to_send = _render_consent()
-        _render_progress_tracking_consent()
+        progress_consented = _render_progress_tracking_consent()
+        if progress_consented:
+            st.session_state.body_site = select_body_site(
+                label=format_text("body_site_label"),
+                current_value=st.session_state.body_site or None,
+            )
         _render_anamnesis()
         _render_prompt_templates()
 

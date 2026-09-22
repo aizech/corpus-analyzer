@@ -9,7 +9,7 @@ import streamlit as st
 from config import config
 from translations import _
 
-_CSS_PATH = Path(__file__).parent / "assets" / "custom.css"
+_CSS_PATH = Path(__file__).parent.parent / "assets" / "custom.css"
 _MATERIAL_ICON_RE = re.compile(r":material/([a-z0-9_]+):")
 
 
