@@ -115,6 +115,10 @@ UI_TEXTS: Dict[str, Dict[str, str]] = {
         "en": "Blur faces and tattoos (experimental, local processing; requires opencv-python)",
         "de": "Gesichter und Tattoos verwischen (experimentell, lokale Verarbeitung; erfordert opencv-python)",
     },
+    "privacy_blur_unavailable": {
+        "en": "Install opencv-python to enable face/tattoo blurring.",
+        "de": "Installiere opencv-python, um Gesichter-/Tattoo-Verwischung zu aktivieren.",
+    },
     # Consent
     "consent_title": {
         "en": "Privacy confirmation required",

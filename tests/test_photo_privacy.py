@@ -4,7 +4,7 @@ import io
 
 from PIL import Image as PILImage
 
-from photo_privacy import blur_faces_and_tattoos, strip_exif
+from photo_privacy import blur_faces_and_tattoos, is_opencv_available, strip_exif
 
 
 def _make_jpeg_with_gps() -> bytes:
@@ -67,3 +67,8 @@ def test_blur_faces_without_opencv_returns_original_and_warns(caplog):
     result = blur_faces_and_tattoos(image, enabled=True)
     assert result is image
     assert "opencv-python is not installed" in caplog.text
+
+
+def test_is_opencv_available_returns_boolean():
+    # This test simply verifies the helper returns a bool without crashing.
+    assert isinstance(is_opencv_available(), bool)

@@ -11,7 +11,7 @@ from analysis_prompt import build_analysis_prompt, build_anamnesis_text
 from export import PDF_EXPORT_AVAILABLE, cached_markdown_report, cached_pdf_report
 from image_loader import LoadedImage, load_camera_shot, load_images, resize_for_display
 from models import get_default_model_id
-from photo_privacy import blur_faces_and_tattoos, strip_exif
+from photo_privacy import blur_faces_and_tattoos, is_opencv_available, strip_exif
 from translations import format_text
 from ui import (
     card,
@@ -243,11 +243,15 @@ def _render_privacy_options() -> None:
         value=st.session_state.privacy_strip_exif,
         key="strip_exif_checkbox",
     )
+    blur_available = is_opencv_available()
     st.session_state.privacy_blur_faces = st.checkbox(
         format_text("privacy_blur_faces"),
         value=st.session_state.privacy_blur_faces,
         key="blur_faces_checkbox",
+        disabled=not blur_available,
     )
+    if not blur_available:
+        st.caption(format_text("privacy_blur_unavailable"))
 
 
 def _render_prompt_templates() -> None:

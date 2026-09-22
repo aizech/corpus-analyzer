@@ -2,6 +2,11 @@
 
 - Strip EXIF/GPS metadata before sending images to an AI provider.
 - Optionally blur faces and tattoos as an experimental, disabled-by-default feature.
+
+EXIF stripping uses Pillow directly. The ``piexif`` library was evaluated and
+is not required because saving JPEG with ``exif=b""`` and PNG with an empty
+``info`` dict removes all EXIF/GPS and textual metadata sufficiently for this
+use case. If granular EXIF editing is ever needed, ``piexif`` can be revisited.
 """
 
 import io
@@ -11,6 +16,16 @@ from typing import Optional
 from PIL import Image as PILImage
 
 logger = logging.getLogger(__name__)
+
+
+def is_opencv_available() -> bool:
+    """Return True if the optional opencv-python package is installed."""
+    try:
+        import cv2  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
 
 
 def strip_exif(image: PILImage.Image, original_format: Optional[str] = None) -> PILImage.Image:
@@ -66,15 +81,15 @@ def blur_faces_and_tattoos(
     if not enabled:
         return image
 
-    try:
-        import cv2
-        import numpy as np
-    except ImportError:
+    if not is_opencv_available():
         logger.warning(
             "Face/tattoo blurring was enabled but opencv-python is not installed. "
             "Returning the original image."
         )
         return image
+
+    import cv2
+    import numpy as np
 
     try:
         # Convert PIL to OpenCV BGR

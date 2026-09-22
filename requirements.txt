@@ -18,6 +18,9 @@ markdown==3.7
 # Optional: PDF export support. Uncomment or install with `pip install -e ".[pdf]"`.
 # fpdf2==2.8.3
 
+# Optional: face/tattoo blurring in photo privacy. Install with `pip install -e ".[privacy]"`.
+# opencv-python>=4.10.0,<4.11.0
+
 # Utilities
 python-dotenv==1.0.1
 pydantic==2.11.0
