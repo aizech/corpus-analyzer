@@ -170,6 +170,20 @@ UI_TEXTS: Dict[str, Dict[str, str]] = {
         "en": "I agree to store encrypted snapshots for progress tracking",
         "de": "Ich stimme der Speicherung verschlüsselter Snapshots für die Verlaufsverfolgung zu",
     },
+    "snapshot_save_title": {
+        "en": "Save for progress tracking",
+        "de": "Für Verlaufsverfolgung speichern",
+    },
+    "snapshot_save_help": {
+        "en": "Save this analysis so you can compare it with a future photo of the same body area.",
+        "de": "Speichere diese Analyse, um sie später mit einem neuen Foto derselben Körperregion zu vergleichen.",
+    },
+    "snapshot_save_button": {"en": "Save snapshot", "de": "Snapshot speichern"},
+    "snapshot_save_success": {"en": "Snapshot saved.", "de": "Snapshot gespeichert."},
+    "snapshot_save_error": {
+        "en": "Could not save snapshot. Check the storage configuration.",
+        "de": "Snapshot konnte nicht gespeichert werden. Prüfe die Speicher-Konfiguration.",
+    },
     # Body map labels
     "body_site_label": {"en": "Body location", "de": "Körperstelle"},
     "body_front_head": {"en": "Head / face (front)", "de": "Kopf / Gesicht (vorne)"},

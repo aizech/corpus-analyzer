@@ -1,5 +1,6 @@
 import io
 from typing import Dict, List, Optional
+from uuid import uuid4
 
 import streamlit as st
 from agno.media import Image as AgnoImage
@@ -13,6 +14,8 @@ from export import PDF_EXPORT_AVAILABLE, cached_markdown_report, cached_pdf_repo
 from image_loader import LoadedImage, load_camera_shot, load_images, resize_for_display
 from models import get_default_model_id
 from photo_privacy import blur_faces_and_tattoos, is_opencv_available, strip_exif
+from snapshot_builder import build_snapshot
+from storage.factory import get_storage_backend
 from translations import format_text
 from ui import (
     card,
@@ -38,11 +41,13 @@ def _init_session() -> None:
         "analysis_images": [],  # list of {"bytes": bytes, "caption": str, "source": str}
         "analysis_model": "",
         "analysis_context": "",
+        "analysis_prompt": "",
         "photo_anamnesis": {},
         "privacy_strip_exif": True,
         "privacy_blur_faces": False,
         "progress_tracking_consent": False,
         "body_site": "",
+        "user_id": str(uuid4()),
         "selected_prompts": [],
         "custom_context": "",
     }
@@ -183,6 +188,7 @@ def _run_analysis(role: str, images: List[PILImage.Image]) -> str:
 
     st.session_state["analysis_model"] = get_default_model_id()
     st.session_state["analysis_context"] = st.session_state.additional_info
+    st.session_state["analysis_prompt"] = prompt
     st.session_state["analysis_results"][role] = analysis_text
     return analysis_text
 
@@ -478,6 +484,35 @@ def _render_researcher_view(sections: Dict[str, str], raw_text: str) -> None:
         st.markdown(raw_text)
 
 
+def _render_save_snapshot() -> None:
+    """Offer to save the current analysis as a snapshot for progress tracking."""
+    if not config.ENABLE_PROGRESS_TRACKING or not st.session_state.progress_tracking_consent:
+        return
+
+    st.markdown("---")
+    st.markdown(f"**{format_text('snapshot_save_title')}**")
+    st.markdown(format_text("snapshot_save_help"))
+    if st.button(format_text("snapshot_save_button"), icon=":material/save:", key="save_snapshot"):
+        try:
+            backend = get_storage_backend()
+            snapshot = build_snapshot(
+                user_id=st.session_state.user_id,
+                images=st.session_state.analysis_images,
+                body_site=st.session_state.body_site or None,
+                anamnesis=st.session_state.photo_anamnesis,
+                analysis_text=_get_analysis_text(st.session_state.user_role),
+                role=st.session_state.user_role,
+                prompt=st.session_state.get("analysis_prompt", ""),
+            )
+            backend.save_snapshot(snapshot)
+            st.success(format_text("snapshot_save_success"))
+        except Exception:
+            st.error(format_text("snapshot_save_error"))
+            import logging
+
+            logging.getLogger(__name__).exception("Snapshot save failed")
+
+
 def _render_export_and_feedback(role: str) -> None:
     """Render download buttons and a quick rating widget."""
     images = st.session_state.get("analysis_images", [])
@@ -690,6 +725,7 @@ def main() -> None:
         role = st.session_state.user_role
         if _get_analysis_text(role):
             _render_results(role)
+            _render_save_snapshot()
         elif any(_get_analysis_text(r) for r in ROLES):
             st.info(format_text("role_switch_info", role=role_labels[role]))
             if st.button(

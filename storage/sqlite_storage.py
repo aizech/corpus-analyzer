@@ -70,15 +70,25 @@ class EncryptedSQLiteStorage(AbstractStorage):
                 "CREATE INDEX IF NOT EXISTS idx_snapshots_body_site ON snapshots (body_site)"
             )
 
-    def _encrypt(self, value: Optional[str]) -> Optional[bytes]:
+    def _encrypt_text(self, value: Optional[str]) -> Optional[bytes]:
         if value is None:
             return None
         return self._fernet.encrypt(value.encode("utf-8"))
 
-    def _decrypt(self, value: Optional[bytes]) -> Optional[str]:
+    def _encrypt_bytes(self, value: Optional[bytes]) -> Optional[bytes]:
+        if value is None:
+            return None
+        return self._fernet.encrypt(value)
+
+    def _decrypt_text(self, value: Optional[bytes]) -> Optional[str]:
         if value is None:
             return None
         return self._fernet.decrypt(value).decode("utf-8")
+
+    def _decrypt_bytes(self, value: Optional[bytes]) -> Optional[bytes]:
+        if value is None:
+            return None
+        return self._fernet.decrypt(value)
 
     def _row_to_snapshot(self, row: sqlite3.Row) -> PhotoSnapshot:
         return PhotoSnapshot(
@@ -88,9 +98,9 @@ class EncryptedSQLiteStorage(AbstractStorage):
             image_hash=row["image_hash"],
             image_path=None,
             body_site=row["body_site"],
-            anamnesis=self._decrypt(row["encrypted_anamnesis"]),
-            analysis_summary=self._decrypt(row["encrypted_summary"]),
-            encrypted_image=row["encrypted_image"],
+            anamnesis=self._decrypt_text(row["encrypted_anamnesis"]),
+            analysis_summary=self._decrypt_text(row["encrypted_summary"]),
+            encrypted_image=self._decrypt_bytes(row["encrypted_image"]),
             tags=[SnapshotTag(t) for t in json.loads(row["tags"] or "[]")],
             metadata=json.loads(row["metadata"] or "{}"),
         )
@@ -117,9 +127,9 @@ class EncryptedSQLiteStorage(AbstractStorage):
                     created_at,
                     snapshot.image_hash,
                     snapshot.body_site,
-                    self._encrypt(snapshot.anamnesis),
-                    self._encrypt(snapshot.analysis_summary),
-                    snapshot.encrypted_image,
+                    self._encrypt_text(snapshot.anamnesis),
+                    self._encrypt_text(snapshot.analysis_summary),
+                    self._encrypt_bytes(snapshot.encrypted_image),
                     json.dumps([t.value for t in snapshot.tags]),
                     json.dumps(snapshot.metadata),
                 ),
