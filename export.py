@@ -3,7 +3,7 @@
 import base64
 import io
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional
 
 import streamlit as st
 
@@ -25,9 +25,9 @@ if TYPE_CHECKING:
     from fpdf.enums import XPos, YPos
 
 DISCLAIMER = (
-    "This analysis is for educational and demonstration purposes only. "
-    "All medical imaging should be reviewed by qualified healthcare professionals "
-    "for clinical decision-making."
+    "This analysis is for educational and orientation purposes only. "
+    "All medical images, health photos, and photographed documents should be reviewed by "
+    "qualified healthcare professionals for clinical decision-making."
 )
 
 
@@ -35,38 +35,54 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
 
+def _image_to_data_uri(image: object) -> str:
+    """Serialize a PIL image to a PNG data URI."""
+    buf = io.BytesIO()
+    image.save(buf, format="PNG")
+    img_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+    return f"data:image/png;base64,{img_b64}"
+
+
 def build_markdown_report(
     image: object,
     analysis_text: str,
     model_id: str,
     additional_context: str = "",
+    additional_images: Optional[List[object]] = None,
 ) -> str:
     """Build a Markdown report string.
 
     Args:
-        image: A PIL Image instance.
+        image: A PIL Image instance representing the primary image.
         analysis_text: The analysis text from the model.
         model_id: Model identifier used for the analysis.
         additional_context: Optional user-provided context.
+        additional_images: Optional list of additional PIL images to include.
 
     Returns:
         Markdown content as a string.
     """
-    buf = io.BytesIO()
-    image.save(buf, format="PNG")
-    img_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
-
     lines = [
-        f"# {config.APP_NAME} - Medical Image Analysis",
+        f"# {config.APP_NAME} - Image Analysis Report",
         "",
         f"**Date:** {_now()}",
         f"**Model:** {model_id}",
         "",
-        "## Uploaded Image",
+        "## Uploaded Image(s)",
         "",
-        f"![Uploaded medical image](data:image/png;base64,{img_b64})",
+        f"![Uploaded image]({_image_to_data_uri(image)})",
         "",
     ]
+
+    for idx, extra_image in enumerate(additional_images or []):
+        lines.extend(
+            [
+                f"### Image {idx + 2}",
+                "",
+                f"![Uploaded image {idx + 2}]({_image_to_data_uri(extra_image)})",
+                "",
+            ]
+        )
 
     if additional_context:
         lines.extend(
@@ -103,7 +119,7 @@ if PDF_EXPORT_AVAILABLE:
             self.cell(
                 0,
                 10,
-                f"{config.APP_NAME} - Medical Image Analysis",
+                f"{config.APP_NAME} - Image Analysis Report",
                 new_x=XPos.LMARGIN,
                 new_y=YPos.NEXT,
                 align="L",
@@ -117,19 +133,32 @@ if PDF_EXPORT_AVAILABLE:
             self.cell(0, 10, DISCLAIMER, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
 
 
+def _add_image_to_pdf(pdf: "FPDF", image: object) -> None:
+    """Add a single image to a PDF, fitting it to page width."""
+    img_buf = io.BytesIO()
+    image.save(img_buf, format="PNG")
+    img_buf.seek(0)
+
+    page_width = pdf.w - 2 * pdf.l_margin
+    pdf.image(img_buf, x=pdf.l_margin, w=page_width)
+    pdf.ln(4)
+
+
 def build_pdf_report(
     image: object,
     analysis_text: str,
     model_id: str,
     additional_context: str = "",
+    additional_images: Optional[List[object]] = None,
 ) -> bytes:
     """Build a PDF report as bytes.
 
     Args:
-        image: A PIL Image instance.
+        image: A PIL Image instance representing the primary image.
         analysis_text: The analysis text from the model.
         model_id: Model identifier used for the analysis.
         additional_context: Optional user-provided context.
+        additional_images: Optional list of additional PIL images to include.
 
     Returns:
         PDF file content as bytes.
@@ -146,15 +175,9 @@ def build_pdf_report(
     pdf.cell(0, 6, f"Model: {model_id}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.ln(4)
 
-    # Save image to a temporary in-memory buffer
-    img_buf = io.BytesIO()
-    image.save(img_buf, format="PNG")
-    img_buf.seek(0)
-
-    # Fit image to page width with margins
-    page_width = pdf.w - 2 * pdf.l_margin
-    pdf.image(img_buf, x=pdf.l_margin, w=page_width)
-    pdf.ln(4)
+    _add_image_to_pdf(pdf, image)
+    for extra_image in additional_images or []:
+        _add_image_to_pdf(pdf, extra_image)
 
     if additional_context:
         pdf.set_font("helvetica", "B", 11)
@@ -177,6 +200,7 @@ def cached_markdown_report(
     analysis_text: str,
     model_id: str,
     additional_context: str = "",
+    additional_image_bytes: Optional[List[bytes]] = None,
 ) -> str:
     """Cache the generated Markdown report.
 
@@ -185,7 +209,12 @@ def cached_markdown_report(
     from PIL import Image as PILImage
 
     image = PILImage.open(io.BytesIO(image_bytes))
-    return build_markdown_report(image, analysis_text, model_id, additional_context)
+    additional_images = None
+    if additional_image_bytes:
+        additional_images = [PILImage.open(io.BytesIO(b)) for b in additional_image_bytes]
+    return build_markdown_report(
+        image, analysis_text, model_id, additional_context, additional_images
+    )
 
 
 @st.cache_data(show_spinner=False)
@@ -194,6 +223,7 @@ def cached_pdf_report(
     analysis_text: str,
     model_id: str,
     additional_context: str = "",
+    additional_image_bytes: Optional[List[bytes]] = None,
 ) -> bytes:
     """Cache the generated PDF report.
 
@@ -205,4 +235,7 @@ def cached_pdf_report(
     from PIL import Image as PILImage
 
     image = PILImage.open(io.BytesIO(image_bytes))
-    return build_pdf_report(image, analysis_text, model_id, additional_context)
+    additional_images = None
+    if additional_image_bytes:
+        additional_images = [PILImage.open(io.BytesIO(b)) for b in additional_image_bytes]
+    return build_pdf_report(image, analysis_text, model_id, additional_context, additional_images)

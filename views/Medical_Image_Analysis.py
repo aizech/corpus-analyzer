@@ -1,16 +1,16 @@
 import io
+from typing import Dict, List, Optional
 
-import numpy as np
-import pydicom
 import streamlit as st
 from agno.media import Image as AgnoImage
 from PIL import Image as PILImage
 
 from agents.medical_agent import create_medical_imaging_agent
 from analysis_format import confidence_level, parse_analysis_sections
-from dicom_utils import anonymize_dicom_dataset, get_anonymization_report
 from export import PDF_EXPORT_AVAILABLE, cached_markdown_report, cached_pdf_report
+from image_loader import LoadedImage, load_camera_shot, load_images, resize_for_display
 from models import get_default_model_id
+from photo_privacy import blur_faces_and_tattoos, strip_exif
 from ui import (
     card,
     empty_state,
@@ -21,25 +21,39 @@ from ui import (
     workflow_steps,
 )
 
-ANALYZE_SPINNER = "Analyzing image... Please wait."
+ANALYZE_SPINNER = "Analyzing... Please wait."
 ROLES = ["clinician", "patient", "researcher"]
 
 
 def _init_session() -> None:
     """Initialize session state keys used by this page."""
-    defaults = {
+    defaults: Dict[str, object] = {
         "user_role": "clinician",
         "user_language": "en",
         "additional_info": "",
         "analysis_results": {},
-        "analysis_image_bytes": None,
+        "analysis_images": [],  # list of {"bytes": bytes, "caption": str, "source": str}
         "analysis_model": "",
         "analysis_context": "",
+        "photo_anamnesis": {},
+        "privacy_strip_exif": True,
+        "privacy_blur_faces": False,
+        "selected_prompts": [],
+        "custom_context": "",
     }
     # Migrate legacy single-analysis key to per-role storage.
     if "analysis_text" in st.session_state and "analysis_results" not in st.session_state:
         legacy_text = st.session_state.pop("analysis_text")
         defaults["analysis_results"] = {"clinician": legacy_text} if legacy_text else {}
+
+    # Migrate legacy single image bytes to gallery list.
+    if "analysis_image_bytes" in st.session_state and "analysis_images" not in st.session_state:
+        legacy_bytes = st.session_state.pop("analysis_image_bytes")
+        if legacy_bytes:
+            defaults["analysis_images"] = [
+                {"bytes": legacy_bytes, "caption": "Uploaded image", "source": "upload"}
+            ]
+
     for key, default in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = default
@@ -59,39 +73,73 @@ def _get_or_create_agent():
     return st.session_state.medical_agent
 
 
-def _load_uploaded_image(uploaded_file, anonymize: bool = True):
-    """Convert an uploaded file to a PIL Image, handling DICOM anonymization."""
-    file_extension = uploaded_file.name.split(".")[-1].lower()
-    is_dicom = file_extension in ["dicom", "dcm"] or uploaded_file.type == "application/dicom"
-
-    if is_dicom:
-        uploaded_file.seek(0)
-        dicom_data = pydicom.dcmread(uploaded_file)
-        cleared, removed = get_anonymization_report(dicom_data)
-        dicom_for_use = anonymize_dicom_dataset(dicom_data) if anonymize else dicom_data
-
-        img_array = dicom_for_use.pixel_array
-        img_array = img_array / img_array.max() * 255
-        img_array = img_array.astype(np.uint8)
-
-        pil_image = PILImage.fromarray(img_array)
-        if len(img_array.shape) == 2:
-            pil_image = pil_image.convert("RGB")
-
-        return pil_image, cleared, removed
-
-    pil_image = PILImage.open(uploaded_file)
-    return pil_image, [], []
+def _pil_to_bytes(pil_image: PILImage.Image) -> bytes:
+    """Serialize a PIL image to PNG bytes."""
+    buf = io.BytesIO()
+    pil_image.save(buf, format="PNG")
+    return buf.getvalue()
 
 
-def _resize_for_display(pil_image: PILImage.Image, max_width: int = 600) -> PILImage.Image:
-    """Resize an image while preserving aspect ratio."""
-    width, height = pil_image.size
-    if width <= max_width:
-        return pil_image
-    aspect_ratio = width / height
-    new_height = int(max_width / aspect_ratio)
-    return pil_image.resize((max_width, new_height))
+def _apply_privacy(image: PILImage.Image, original_format: Optional[str] = None) -> PILImage.Image:
+    """Apply selected privacy transforms to a single image."""
+    if st.session_state.privacy_strip_exif:
+        image = strip_exif(image, original_format=original_format)
+    if st.session_state.privacy_blur_faces:
+        image = blur_faces_and_tattoos(image, enabled=True)
+    return image
+
+
+def _add_to_gallery(items: List[Dict[str, object]]) -> None:
+    """Append new images to the session gallery, avoiding exact byte duplicates."""
+    existing = {item["bytes"] for item in st.session_state.analysis_images}
+    for item in items:
+        if item["bytes"] not in existing:
+            st.session_state.analysis_images.append(item)
+            existing.add(item["bytes"])
+
+
+def _gallery_to_loaded_images() -> List[LoadedImage]:
+    """Convert the current session gallery into LoadedImage instances."""
+    loaded: List[LoadedImage] = []
+    for item in st.session_state.analysis_images:
+        pil_image = PILImage.open(io.BytesIO(item["bytes"]))
+        loaded.append(
+            LoadedImage(
+                pil_image=pil_image,
+                source_type=item.get("source", "session"),
+                original_name=item.get("caption"),
+                is_dicom=False,
+                cleared_tags=[],
+                removed_sequences=[],
+            )
+        )
+    return loaded
+
+
+def _build_anamnesis_text() -> str:
+    """Build a short anamnesis paragraph from session state."""
+    anamnesis = st.session_state.get("photo_anamnesis", {})
+    if not anamnesis:
+        return ""
+
+    parts: List[str] = []
+    mapping = {
+        "since_when": "Since when",
+        "has_changed": "Has it changed",
+        "itching": "Itching",
+        "bleeding": "Bleeding",
+        "pain": "Pain",
+        "size_approx": "Approximate size",
+        "additional_notes": "Additional notes",
+    }
+    for key, label in mapping.items():
+        value = anamnesis.get(key)
+        if value:
+            parts.append(f"- {label}: {value}")
+
+    if not parts:
+        return ""
+    return "Anamnesis:\n" + "\n".join(parts)
 
 
 def _build_analysis_prompt(additional_info: str, role: str, language: str) -> str:
@@ -99,14 +147,14 @@ def _build_analysis_prompt(additional_info: str, role: str, language: str) -> st
     role_instruction = {
         "clinician": (
             "You are writing for a qualified healthcare professional. "
-            "Use precise radiology terminology, structured findings, and keep the tone concise and clinical."
+            "Use precise terminology, structured findings, and keep the tone concise and clinical."
         ),
         "patient": (
             "You are explaining the results to a patient with no medical background. "
             "Use plain language, avoid jargon, and focus on what the findings mean and what to do next."
         ),
         "researcher": (
-            "You are writing for a medical researcher. Include technical detail, differential diagnoses, "
+            "You are writing for a medical researcher. Include technical detail, differential considerations, "
             "confidence discussion, and evidence-based references where possible."
         ),
     }.get(role, "")
@@ -116,17 +164,28 @@ def _build_analysis_prompt(additional_info: str, role: str, language: str) -> st
         "en": "Answer in English.",
     }.get(language, "Answer in the language of the user; if not specified, answer in English.")
 
-    base = (
-        "Analyze this medical image considering the following context: " + additional_info
-        if additional_info
-        else "Analyze this medical image and provide detailed findings."
-    )
+    anamnesis_text = _build_anamnesis_text()
+
+    base_parts: List[str] = []
+    if additional_info:
+        base_parts.append(
+            "Analyze the provided image(s) considering the following context: " + additional_info
+        )
+    else:
+        base_parts.append("Analyze the provided image(s) and provide detailed findings.")
+
+    if anamnesis_text:
+        base_parts.append(anamnesis_text)
+
+    base = "\n\n".join(base_parts)
 
     return (
         f"Role: {role.capitalize()}\n\n"
         f"{role_instruction}\n\n"
         f"{base}\n\n"
-        "If you are not sure about the diagnosis, please provide a possible diagnosis. "
+        "If you are not sure about what you see, please say so rather than guessing. "
+        "If the image quality or content is insufficient for assessment, state explicitly "
+        "that you cannot assess it and explain what is missing or how to improve the image(s). "
         f"{language_instruction}"
     )
 
@@ -142,12 +201,13 @@ def _extract_response_text(response) -> str:
     return str(response)
 
 
-def _run_analysis(role: str, display_image: PILImage.Image) -> str:
-    """Run the medical imaging agent for the given role and return the text response."""
-    img_buf = io.BytesIO()
-    display_image.save(img_buf, format="PNG")
-    image_bytes = img_buf.getvalue()
-    agno_image = AgnoImage(content=image_bytes, format="png")
+def _run_analysis(role: str, images: List[PILImage.Image]) -> str:
+    """Run the medical imaging agent for the given role and images, returning the text response."""
+    agno_images: List[AgnoImage] = []
+
+    for pil_image in images:
+        image_bytes = _pil_to_bytes(pil_image)
+        agno_images.append(AgnoImage(content=image_bytes, format="png"))
 
     prompt = _build_analysis_prompt(
         st.session_state.additional_info,
@@ -155,23 +215,32 @@ def _run_analysis(role: str, display_image: PILImage.Image) -> str:
         st.session_state.user_language,
     )
     agent = _get_or_create_agent()
-    response = agent.run(prompt, images=[agno_image])
+    response = agent.run(prompt, images=agno_images)
     analysis_text = _extract_response_text(response)
 
-    st.session_state["analysis_image_bytes"] = image_bytes
     st.session_state["analysis_model"] = get_default_model_id()
     st.session_state["analysis_context"] = st.session_state.additional_info
     st.session_state["analysis_results"][role] = analysis_text
     return analysis_text
 
 
-def _render_image_viewer(pil_image: PILImage.Image, display_image: PILImage.Image) -> None:
-    """Render the uploaded image with a lightweight zoom viewer."""
-    col1, col2, col3 = st.columns([1, 10, 1])
-    with col2:
-        st.markdown('<div class="ca-image-viewer">', unsafe_allow_html=True)
-        st.image(display_image, caption="Uploaded Medical Image", use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+def _render_image_gallery() -> None:
+    """Render thumbnails of the current session gallery with delete buttons."""
+    images = st.session_state.analysis_images
+    if not images:
+        return
+
+    st.markdown("**Selected images**")
+    cols = st.columns(min(len(images), 4))
+    for idx, (col, item) in enumerate(zip(cols, images, strict=False)):
+        with col:
+            pil_image = PILImage.open(io.BytesIO(item["bytes"]))
+            display = resize_for_display(pil_image, max_width=200)
+            st.image(display, use_container_width=True)
+            st.caption(item.get("caption", f"Image {idx + 1}"))
+            if st.button("Remove", key=f"remove_image_{idx}", use_container_width=True):
+                st.session_state.analysis_images.pop(idx)
+                st.rerun()
 
 
 def _render_consent() -> bool:
@@ -185,6 +254,7 @@ def _render_consent() -> bool:
                 <li>The image bytes will be sent to the selected AI provider.</li>
                 <li>Your prompt text will be sent to the selected AI provider.</li>
                 <li>DICOM metadata is anonymized locally and is not sent.</li>
+                <li>EXIF/GPS metadata is stripped from smartphone photos before sending.</li>
                 <li>Burned-in text/annotations inside the image pixels may still be visible.</li>
             </ul>
         </div>
@@ -193,14 +263,37 @@ def _render_consent() -> bool:
     )
     with st.expander("Why is this required?"):
         st.write(
-            "Medical images may contain protected health information (PHI). "
-            "This confirmation helps ensure you do not accidentally send identifiable patient data "
+            "Medical images and health photos may contain protected health information. "
+            "This confirmation helps ensure you do not accidentally send identifiable data "
             "to an external AI service."
         )
     return st.checkbox(
         "I confirm this upload and text contain no sensitive patient-identifying information",
         value=False,
         key="privacy_consent",
+    )
+
+
+def _render_photo_guidance() -> None:
+    """Display tips for taking useful smartphone health photos."""
+    st.info(
+        "**Photo tips:** Use good, even lighting. Keep the camera steady and in focus. "
+        "Include a coin or ruler as a scale if possible. Take one close-up and one overview photo. "
+        "Use a plain, neutral background."
+    )
+
+
+def _render_privacy_options() -> None:
+    """Render privacy toggles for EXIF stripping and optional face/tattoo blurring."""
+    st.session_state.privacy_strip_exif = st.checkbox(
+        "Remove EXIF/GPS metadata from photos before analysis",
+        value=st.session_state.privacy_strip_exif,
+        key="strip_exif_checkbox",
+    )
+    st.session_state.privacy_blur_faces = st.checkbox(
+        "Blur faces and tattoos (experimental, local processing; requires opencv-python)",
+        value=st.session_state.privacy_blur_faces,
+        key="blur_faces_checkbox",
     )
 
 
@@ -216,7 +309,10 @@ def _render_prompt_templates() -> None:
             "Keep it concise."
         ),
         "Explain for patient": "Explain the findings in simple, patient-friendly language.",
-        "Focus: red flags": "Focus on urgent findings / red flags and what to do next.",
+        "Focus: red flags": (
+            "Focus on urgent findings / red flags and what to do next. "
+            "For skin or nail photos, mention any signs that should be checked by a doctor soon."
+        ),
         "Online research": (
             "Use online research (e.g., PubMed, medical journals, authoritative clinical references) "
             "to add evidence-based context, cite 2-3 sources, and include URLs where available."
@@ -230,9 +326,6 @@ def _render_prompt_templates() -> None:
             "- Clinical question: \n"
         ),
     }
-
-    if "selected_prompts" not in st.session_state:
-        st.session_state.selected_prompts = []
 
     selected = st.multiselect(
         "Quick prompts (select one or more)",
@@ -255,6 +348,40 @@ def _render_prompt_templates() -> None:
         parts.append(custom_context.strip())
     st.session_state.additional_info = "\n\n".join(parts)
     st.caption(f"{len(st.session_state.additional_info)} characters")
+
+
+def _render_anamnesis() -> None:
+    """Render optional anamnesis fields."""
+    anamnesis = st.session_state.get("photo_anamnesis", {})
+    with st.expander("About this photo / Anamnese (optional)", expanded=False):
+        col1, col2 = st.columns(2)
+        with col1:
+            anamnesis["since_when"] = st.text_input(
+                "Since when?", value=anamnesis.get("since_when", ""), key="anamnesis_since_when"
+            )
+            anamnesis["has_changed"] = st.text_input(
+                "Has it changed?", value=anamnesis.get("has_changed", ""), key="anamnesis_changed"
+            )
+            anamnesis["size_approx"] = st.text_input(
+                "Approximate size", value=anamnesis.get("size_approx", ""), key="anamnesis_size"
+            )
+        with col2:
+            anamnesis["itching"] = st.text_input(
+                "Itching?", value=anamnesis.get("itching", ""), key="anamnesis_itching"
+            )
+            anamnesis["bleeding"] = st.text_input(
+                "Bleeding?", value=anamnesis.get("bleeding", ""), key="anamnesis_bleeding"
+            )
+            anamnesis["pain"] = st.text_input(
+                "Pain?", value=anamnesis.get("pain", ""), key="anamnesis_pain"
+            )
+        anamnesis["additional_notes"] = st.text_area(
+            "Additional notes",
+            value=anamnesis.get("additional_notes", ""),
+            key="anamnesis_notes",
+            height=80,
+        )
+    st.session_state.photo_anamnesis = anamnesis
 
 
 def _render_results(role: str) -> None:
@@ -289,7 +416,7 @@ def _render_results(role: str) -> None:
     _render_export_and_feedback(role)
 
 
-def _render_clinician_view(sections: dict, raw_text: str) -> None:
+def _render_clinician_view(sections: Dict[str, str], raw_text: str) -> None:
     """Render a scannable clinician view of the report."""
     order = [
         "clinical interpretation",
@@ -299,7 +426,7 @@ def _render_clinician_view(sections: dict, raw_text: str) -> None:
     ]
     for key in order:
         if key in sections:
-            with st.expander(sections[key].split("\n")[0] if False else key.title(), expanded=True):
+            with st.expander(key.title(), expanded=True):
                 st.markdown(sections[key])
 
     if "patient education" in sections:
@@ -319,7 +446,7 @@ def _render_clinician_view(sections: dict, raw_text: str) -> None:
         )
 
 
-def _render_patient_view(sections: dict, raw_text: str) -> None:
+def _render_patient_view(sections: Dict[str, str], raw_text: str) -> None:
     """Render a simplified patient-friendly view."""
     if "patient education" in sections:
         card("What this means", sections["patient education"], icon=":material/info:")
@@ -339,7 +466,7 @@ def _render_patient_view(sections: dict, raw_text: str) -> None:
             st.markdown(sections["_raw"])
 
 
-def _render_researcher_view(sections: dict, raw_text: str) -> None:
+def _render_researcher_view(sections: Dict[str, str], raw_text: str) -> None:
     """Render the full structured report for researchers."""
     parsed_keys = [k for k in sections if k != "_raw"]
     for key, body in sections.items():
@@ -353,17 +480,27 @@ def _render_researcher_view(sections: dict, raw_text: str) -> None:
 
 def _render_export_and_feedback(role: str) -> None:
     """Render download buttons and a quick rating widget."""
-    image_bytes = st.session_state.get("analysis_image_bytes")
+    images = st.session_state.get("analysis_images", [])
     analysis_text = _get_analysis_text(role)
     model_id = st.session_state.get("analysis_model", get_default_model_id())
     additional_context = st.session_state.get("analysis_context", "")
 
-    if not image_bytes or not analysis_text:
+    if not images or not analysis_text:
         return
 
     st.markdown("---")
     st.markdown("### Report actions")
-    md_content = cached_markdown_report(image_bytes, analysis_text, model_id, additional_context)
+
+    first_image_bytes = images[0]["bytes"]
+    additional_image_bytes = [img["bytes"] for img in images[1:]] if len(images) > 1 else None
+
+    md_content = cached_markdown_report(
+        first_image_bytes,
+        analysis_text,
+        model_id,
+        additional_context,
+        additional_image_bytes=additional_image_bytes,
+    )
 
     col1, col2, col3 = st.columns([1, 1, 2])
     with col1:
@@ -378,7 +515,11 @@ def _render_export_and_feedback(role: str) -> None:
     with col2:
         if PDF_EXPORT_AVAILABLE:
             pdf_content = cached_pdf_report(
-                image_bytes, analysis_text, model_id, additional_context
+                first_image_bytes,
+                analysis_text,
+                model_id,
+                additional_context,
+                additional_image_bytes=additional_image_bytes,
             )
             st.download_button(
                 label="Download PDF",
@@ -398,7 +539,7 @@ def main() -> None:
     inject_custom_css()
     render_page_header(
         "Analyze",
-        subtitle="Upload a medical image for professional analysis",
+        subtitle="Upload medical images, health photos, or photographed documents",
     )
     render_sidebar_info()
     _init_session()
@@ -428,55 +569,95 @@ def main() -> None:
     controls_container = st.container()
     analysis_container = st.container()
 
+    # ----- Upload / camera section -----
     with upload_container:
-        uploaded_file = st.file_uploader(
-            "Upload medical image",
-            type=["jpg", "jpeg", "png", "dicom", "dcm"],
-            help="Supported formats: JPG, JPEG, PNG, DICOM, DCM",
-            label_visibility="collapsed",
-        )
+        tab_upload, tab_camera = st.tabs(["Upload files", "Take photos"])
 
-    if uploaded_file is None:
+        with tab_upload:
+            uploaded_files = st.file_uploader(
+                "Upload image(s)",
+                type=["jpg", "jpeg", "png", "dicom", "dcm"],
+                accept_multiple_files=True,
+                help="Supported formats: JPG, JPEG, PNG, DICOM, DCM. You can upload several files.",
+                label_visibility="collapsed",
+            )
+            if uploaded_files:
+                loaded = load_images(uploaded_files, anonymize=True)
+                gallery_items = []
+                for item in loaded:
+                    fmt = (item.original_name or "").split(".")[-1].upper() or None
+                    processed = _apply_privacy(item.pil_image, original_format=fmt)
+                    gallery_items.append(
+                        {
+                            "bytes": _pil_to_bytes(processed),
+                            "caption": item.original_name or "Uploaded image",
+                            "source": item.source_type,
+                        }
+                    )
+                _add_to_gallery(gallery_items)
+
+        with tab_camera:
+            _render_photo_guidance()
+            camera_input = st.camera_input(
+                "Take a photo",
+                label_visibility="collapsed",
+                key="camera_input",
+            )
+            if camera_input and st.button(
+                "Add this photo to gallery", use_container_width=True, key="add_camera_photo"
+            ):
+                raw_loaded = load_camera_shot(camera_input.getvalue())
+                processed = _apply_privacy(raw_loaded.pil_image)
+                _add_to_gallery(
+                    [
+                        {
+                            "bytes": _pil_to_bytes(processed),
+                            "caption": "Camera capture",
+                            "source": "camera",
+                        }
+                    ]
+                )
+                st.rerun()
+
+    loaded_images = _gallery_to_loaded_images()
+
+    if not loaded_images:
         empty_state(
             icon=":material/upload_file:",
-            title="Upload a medical image to begin",
-            description="Corpus Analyzer uses AI to provide educational analysis of X-rays, "
-            "MRI, CT, and ultrasound images.",
+            title="Upload or capture images to begin",
+            description=(
+                "Corpus Analyzer uses AI to provide educational explanations of medical images, "
+                "smartphone health photos, and photographed documents."
+            ),
         )
         workflow_steps()
         return
 
     try:
-        pil_image, cleared_tags, removed_sequences = _load_uploaded_image(
-            uploaded_file, anonymize=True
-        )
-        display_image = _resize_for_display(pil_image)
+        for img in loaded_images:
+            resize_for_display(img.pil_image)
     except Exception as e:
         st.error(f"Error processing image: {str(e)}")
-        st.info("Please upload a valid JPG, PNG, or DICOM file and try again.")
+        st.info("Please upload valid JPG, PNG, or DICOM files and try again.")
         return
 
     with controls_container:
-        _render_image_viewer(pil_image, display_image)
+        _render_image_gallery()
 
         with st.expander("Image details", expanded=False):
-            st.write(
-                f"**Format:** {uploaded_file.type or uploaded_file.name.split('.')[-1].upper()}"
-            )
-            st.write(f"**Dimensions:** {pil_image.size[0]} x {pil_image.size[1]} pixels")
-            if cleared_tags:
-                st.write("**Cleared DICOM tags:**", ", ".join(cleared_tags))
-            if removed_sequences:
-                st.write("**Removed sequences:**", ", ".join(removed_sequences))
-            if not cleared_tags and not removed_sequences:
-                st.write("No DICOM metadata anonymization performed (standard image).")
+            for idx, loaded in enumerate(loaded_images):
+                fmt, dims = _image_detail_strings(loaded)
+                st.write(f"**Image {idx + 1} — Format:** {fmt}, **Dimensions:** {dims}")
+                if loaded.source_type == "dicom":
+                    st.write("DICOM metadata was anonymized locally before conversion.")
 
+        _render_privacy_options()
         safe_to_send = _render_consent()
-
+        _render_anamnesis()
         _render_prompt_templates()
 
         analyze_button = st.button(
-            "Analyze Image",
+            "Analyze",
             icon=":material/search:",
             type="primary",
             use_container_width=True,
@@ -491,10 +672,12 @@ def main() -> None:
 
             with st.spinner(ANALYZE_SPINNER):
                 try:
-                    _run_analysis(st.session_state.user_role, display_image)
+                    _run_analysis(
+                        st.session_state.user_role, [img.pil_image for img in loaded_images]
+                    )
                 except Exception:
                     st.error(
-                        "Sorry, we could not analyze the image. Please try again or contact support."
+                        "Sorry, we could not analyze the image(s). Please try again or contact support."
                     )
                     st.info(
                         "If the problem persists, check that your OpenAI API key is valid "
@@ -508,11 +691,7 @@ def main() -> None:
         role = st.session_state.user_role
         if _get_analysis_text(role):
             _render_results(role)
-        elif (
-            _get_analysis_text("clinician")
-            or _get_analysis_text("patient")
-            or _get_analysis_text("researcher")
-        ):
+        elif any(_get_analysis_text(r) for r in ROLES):
             st.info(
                 f"Switching to **{role.capitalize()}** mode requires a new analysis tailored for that audience. "
                 "Click the button below to re-analyze."
@@ -525,10 +704,10 @@ def main() -> None:
             ):
                 with st.spinner(ANALYZE_SPINNER):
                     try:
-                        _run_analysis(role, display_image)
+                        _run_analysis(role, [img.pil_image for img in loaded_images])
                     except Exception:
                         st.error(
-                            "Sorry, we could not analyze the image. Please try again or contact support."
+                            "Sorry, we could not analyze the image(s). Please try again or contact support."
                         )
                         st.info(
                             "If the problem persists, check that your OpenAI API key is valid "
@@ -539,6 +718,14 @@ def main() -> None:
                         logging.getLogger(__name__).exception("Image analysis failed")
                         return
                 st.rerun()
+
+
+def _image_detail_strings(loaded: LoadedImage) -> tuple[str, str]:
+    """Return (format, dimensions) strings for a loaded image."""
+    if loaded.is_dicom:
+        return "DICOM", f"{loaded.pil_image.size[0]} x {loaded.pil_image.size[1]} pixels"
+    extension = (loaded.original_name or "").split(".")[-1].upper() or "Image"
+    return extension, f"{loaded.pil_image.size[0]} x {loaded.pil_image.size[1]} pixels"
 
 
 main()
