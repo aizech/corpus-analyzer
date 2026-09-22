@@ -25,6 +25,13 @@ class Config:
         "yes",
     )
 
+    # Progress tracking requires a legal/privacy review before activation.
+    ENABLE_PROGRESS_TRACKING = os.environ.get("ENABLE_PROGRESS_TRACKING", "false").lower() in (
+        "true",
+        "1",
+        "yes",
+    )
+
     GITHUB_REPO_URL = "https://github.com/aizech/corpus-analyzer"
 
     THIS_DIR = Path(__file__).parent
@@ -32,7 +39,10 @@ class Config:
     # CSS_FILE      = THIS_DIR / "styles" / "custom.css"
     ASSETS_DIR = THIS_DIR / "assets"
 
-    APP_DESCRIPTION = "Corpus Analyzer is an AI interface for analyzing and exploring images with AI agent workflows."
+    APP_DESCRIPTION = (
+        "Corpus Analyzer is an AI-assisted tool that explains medical images, "
+        "smartphone health photos, and photographed health documents in clear language."
+    )
 
     MENU_ITEMS = {
         "Get Help": f"{APP_URL}/help",

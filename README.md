@@ -5,8 +5,8 @@
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Demo](https://img.shields.io/badge/Demo-Live-orange.svg)
 
-> 🏥 **Medical Image Analysis for Education & Second Opinions**
-> Upload an X-ray, MRI, CT, ultrasound, or DICOM image and receive a structured, AI-generated report tailored to clinicians, patients, or researchers.
+> 🏥 **Understand what your body shows — from an MRI scan to a photo of a mole.**
+> Upload a medical image, a smartphone photo, or a photographed document and receive a structured, AI-generated report tailored to clinicians, patients, or researchers. Orientation and education — not a diagnosis.
 
 **Live Demo:** [corpus-analyzer.streamlit.app](https://corpus-analyzer.streamlit.app/)
 
@@ -14,29 +14,52 @@
 
 ## 🎯 Mission
 
-Make medical imaging analysis more accessible and understandable through AI-powered, educational reports while keeping patient privacy and transparency front and center.
+Help people understand what their medical images, body photos, and health documents show — clearly, transparently, and privately — and recognize when professional medical care is the next step.
 
 ---
 
 ## ✨ Key Features
 
-### 🩻 Medical Image Analysis
-- **Multi-modality Support**: X-ray, MRI, CT, ultrasound, and DICOM images
-- **Structured Reporting**: Technical assessment, findings, clinical interpretation, patient-friendly explanation, and references
-- **Role-Aware Reports**: Separate analyses for **Clinician**, **Patient**, and **Researcher** audiences
-- **Evidence-Based Context**: Optional online research quick prompt for literature-backed insights
+| Feature | Status |
+|---|---|
+| Medical image analysis (X-ray, MRI, CT, ultrasound, DICOM) | ✅ |
+| Upload of standard image formats, including smartphone photos | ✅ |
+| Multiple images per session (different angles or mixed DICOM + photos) | 🚧 in evaluation |
+| Analysis quality for non-radiology photos (skin, nails, …) | 🚧 in evaluation |
+| Role-aware reports (Clinician / Patient / Researcher) | ✅ |
+| Quick prompts (radiology style, red flags, patient-friendly, online research, patient context) | ✅ |
+| Privacy-first consent before sending image data to an AI provider | ✅ |
+| Local DICOM anonymization | ✅ |
+| English / Deutsch response language | ✅ |
+| Markdown and PDF export | ✅ |
+| Guided photo capture with photo-quality tips | 🚧 |
+| Photo privacy: EXIF/GPS removal, face and tattoo masking | 🚧 |
+| Dedicated skills for skin, nail, and document photos | 🚧 |
+| Follow-up questions (onset, change, itching, bleeding, pain) | 🚧 |
+| Progress tracking over time (opt-in) | 🗓️ |
+| Body map for marking locations | 🗓️ |
+| Doctor handover export (images, history, timeline) | 🗓️ |
+| Document explainer (doctor's letter, lab report, medication box) | 🚧 |
 
-### 🧠 AI Intelligence
-- **Routed Medical Imaging Agent**: A local skill-based agent that selects the right prompt and tools for the request
-- **Web-Fetcher Tool**: Live page retrieval for up-to-date references (enabled by default, configurable)
-- **DICOM Anonymization**: Local clearing of common identifying metadata tags before analysis
+---
 
-### 🎨 User Experience
-- **Quick Prompts**: Select one or more additive prompts (radiology style, red flags, patient-friendly, online research, patient context)
-- **Language Switch**: English / Deutsch response language
-- **Material Icons**: Clean, professional iconography throughout the interface
-- **Markdown & PDF Export**: Download reports for documentation or sharing
-- **Privacy-First Consent**: Explicit confirmation before sending image data to an AI provider
+## 🎯 Why, How, What
+
+### Why
+We believe everyone has the right to understand what their body shows — and to know when it is time to let a doctor take a look. Too often, people are left alone with an image, a report, or a worry until the next appointment.
+
+### How
+- **Explained for the reader:** separate reports for **Patient**, **Clinician**, and **Researcher**.
+- **Specialist skills instead of one generic model:** a routed agent picks the right skill and tools for each image or document type.
+- **Privacy before analysis:** explicit consent before any image leaves the device; local removal of identifying DICOM metadata and photo EXIF/GPS data.
+- **Transparent and evidence-oriented:** references, optional literature lookup, and a clear medical disclaimer.
+- **Your keys, your control:** bring-your-own-key (BYOK) configuration.
+
+### What
+A web application for AI-assisted image and document analysis: upload → structured, understandable report.
+
+- **Today:** X-ray, MRI, CT, ultrasound, DICOM, standard image formats — including photos taken with a smartphone, and photographed health documents.
+- **Next:** guided phone capture for everyday health photos (skin, nails, wounds), multi-image sessions, progress tracking over time, and doctor-ready exports.
 
 ---
 
@@ -141,32 +164,38 @@ GITHUB_REPO_URL=https://github.com/aizech/corpus-analyzer
 corpus-analyzer/
 ├── app.py                    # Main Streamlit application with page navigation
 ├── views/
-│   ├── Medical_Image_Analysis.py  # Medical imaging interface
+│   ├── Medical_Image_Analysis.py  # Image and document analysis interface
 │   ├── Configuration.py          # Model and API key settings
-│   ├── Feedback.py               # User ratings and feedback
-│   ├── Security.py               # Security and privacy information
-│   └── About.py                  # Platform information
+│   ├── Feedback.py                 # User ratings and feedback
+│   ├── Security.py                 # Security and privacy information
+│   └── About.py                    # Platform information
 ├── agents/
-│   └── medical_agent.py        # Routed medical imaging agent factory
-├── agent_config/                 # Routed agent configuration
-│   ├── agent_config.py         # Agent and RoutedAgent factories
-│   ├── skill_router.py         # Skill discovery, ranking, and prompt composition
-│   └── tool_registry.py        # Tool discovery from skill directories
+│   └── medical_agent.py            # Routed medical imaging agent factory
+├── agent_config/                   # Routed agent configuration
+│   ├── agent_config.py             # Agent and RoutedAgent factories
+│   ├── skill_router.py             # Skill discovery, ranking, and prompt composition
+│   └── tool_registry.py            # Tool discovery from skill directories
 ├── skills/
 │   └── core/
-│       ├── medical-image-analysis/SKILL.md  # Medical imaging skill
-│       └── web-fetcher/                     # Web fetch tool for literature lookup
-├── assets/                       # Static assets and images
-├── config.py                     # Application constants
-├── dicom_utils.py                # DICOM anonymization helpers
-├── export.py                     # PDF / Markdown report generation
-├── analysis_format.py            # Structured report parser
-├── models.py                     # Model configuration and selection
-├── ui.py                         # Shared Streamlit UI components
-├── utils.py                      # General utility functions
-├── tests/                        # pytest test suite
-├── requirements.txt              # Python dependencies
-└── pyproject.toml                # Project metadata and ruff config
+│       ├── medical-image-analysis/  # Medical imaging skill
+│       ├── skin-photo-analysis/     # Skin and mole photo skill
+│       ├── nail-photo-analysis/     # Nail photo skill
+│       ├── document-explainer/      # Doctor's letter / document skill
+│       └── web-fetcher/             # Web fetch tool for literature lookup
+├── storage/                         # Abstract storage interface (Phase 2 prep)
+├── assets/                          # Static assets and images
+├── config.py                        # Application constants
+├── dicom_utils.py                   # DICOM anonymization helpers
+├── image_loader.py                  # Multi-image loading helpers
+├── photo_privacy.py               # EXIF/GPS removal and optional face masking
+├── export.py                        # PDF / Markdown report generation
+├── analysis_format.py               # Structured report parser
+├── models.py                          # Model configuration and selection
+├── ui.py                              # Shared Streamlit UI components
+├── utils.py                           # General utility functions
+├── tests/                             # pytest test suite
+├── requirements.txt                   # Python dependencies
+└── pyproject.toml                     # Project metadata and ruff config
 ```
 
 ### Technical Stack
@@ -184,9 +213,9 @@ corpus-analyzer/
 
 ---
 
-## 🩺 Medical Imaging Analysis
+## 🩺 Medical Imaging & Photo Analysis
 
-The medical imaging agent produces structured educational reports.
+The routed agent produces structured educational reports.
 
 ### Output Structure
 1. **Image Technical Assessment**: Modality, anatomical region, image quality
@@ -203,43 +232,63 @@ The medical imaging agent produces structured educational reports.
 
 After analyzing in one role, switching roles offers a **Re-analyze** button to generate a fresh report for the new audience.
 
+### Multi-Image Sessions
+You can upload or capture several images in one session — for example, different angles of a skin spot, or a DICOM scan alongside a smartphone photo. The agent is instructed that the images belong together, but it still cannot provide a diagnosis.
+
+### Document Explainer
+Photograph a doctor's letter, lab report, or medication package. The document explainer skill summarizes the content in plain language, explains medical terms, and suggests questions to ask your doctor.
+
 ---
 
 ## 🎯 Use Cases
 
-### Medical Professionals
-- **Second Opinions**: Validate initial radiological interpretations
-- **Quality Assurance**: Review and verify imaging reports
-- **Education**: Teaching tool for radiology residents
-- **Research**: Extract structured data from imaging studies
+### Patients and everyday users
+- **Report understanding:** plain-language explanations of medical findings.
+- **Everyday health photos:** moles and skin changes, nails, rashes, wounds, tick bites — photographed with a phone, explained in plain language, with guidance on when to see a doctor.
+- **Document explainer:** understand a doctor's letter, lab value, or medication package without medical jargon.
+- **Keeping track:** (planned) photograph the same spot over time and see what has changed.
+- **Health literacy:** accessible medical information.
 
-### Patients
-- **Report Understanding**: Clear explanations of medical findings
-- **Treatment Planning**: Insights into next steps and options
-- **Health Literacy**: Accessible medical information
+### Medical professionals
+- **Second opinions:** validate initial interpretations.
+- **Quality assurance:** review and verify imaging reports.
+- **Education:** teaching tool for radiology residents.
+- **Research:** extract structured data from imaging studies.
 
-### Healthcare Institutions
-- **Workflow Optimization**: Streamline imaging analysis processes
-- **Decision Support**: AI-assisted diagnostic recommendations
-- **Documentation**: Structured reporting templates
+### Healthcare institutions
+- **Workflow optimization**, **decision support**, and **structured documentation**.
+
+---
+
+## ✅ What Corpus Analyzer is — and isn't
+
+**It is**
+- An educational explanation of what an image or document shows, in language matched to the reader.
+- A structured second look that helps you prepare questions for your doctor.
+- (Planned) A way to track changes over time and a conservative pointer to when professional care is advisable.
+
+**It is not**
+- A diagnosis, a treatment recommendation, or a replacement for medical care.
+- An emergency service. In an emergency, contact your local emergency number.
+- A reason to wait: a skin change that grows, changes color, bleeds, or worries you should be looked at by a doctor — regardless of any AI output.
 
 ---
 
 ## 🔒 Security & Privacy
 
 ### Data Protection
-- **No Patient Data Storage**: Sessions are temporary and local
-- **HIPAA Considerations**: Designed for de-identified educational use
-- **Secure API Communication**: Encrypted data transmission
-- **Local Processing**: Optional on-premise deployment available
+- **No storage by default:** sessions are temporary; uploaded images are kept in memory for the current session only.
+- **Consent first:** image data is sent to an AI provider only after explicit confirmation.
+- **Anonymization:** local clearing of common identifying DICOM metadata and photo EXIF/GPS data before analysis. Face and tattoo masking is available as an experimental, opt-in feature.
+- **Progress tracking (planned):** strictly opt-in, stored encrypted, deletable at any time. The no-storage default stays the default.
+- **Data protection law:** health data is special-category data under **GDPR Art. 9**; the platform is designed for de-identified, educational use. HIPAA considerations apply for US contexts.
+- **Deployment:** optional on-premise / self-hosted deployment.
 
 ### Medical Disclaimer
 
-> **⚠️ Important:** This platform is designed for educational and demonstration purposes only. All medical analyses, suggestions, or information should be reviewed by qualified healthcare professionals before making medical decisions.
+> **⚠️ Important:** Corpus Analyzer is designed for educational and orientation purposes only. It does not provide a diagnosis. All analyses, suggestions, and information — for medical images as well as photos taken with a phone — must be reviewed by a qualified healthcare professional before any medical decision is made.
 >
-> The platform is not FDA-approved for clinical decision-making and should not replace professional medical advice, diagnosis, or treatment. Always consult with a qualified healthcare provider for medical concerns.
-
----
+> The platform has not been CE-marked or FDA-cleared and must not replace professional medical advice, diagnosis, or treatment. If you are worried about a symptom or a change in your body, consult a healthcare provider.
 
 ---
 
@@ -262,13 +311,19 @@ After analyzing in one role, switching roles offers a **Re-analyze** button to g
 
 ### Docker Deployment
 ```dockerfile
-FROM python:3.9-slim
+FROM python:3.12-slim
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
 EXPOSE 8501
-CMD ["streamlit", "run", "app.py"]
+CMD ["streamlit", "run", "app.py", "--server.address", "0.0.0.0"]
+```
+
+Build and run:
+```bash
+docker build -t corpus-analyzer .
+docker run -p 8501:8501 corpus-analyzer
 ```
 
 ### Self-Hosting
