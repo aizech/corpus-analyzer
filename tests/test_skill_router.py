@@ -20,6 +20,11 @@ def test_discover_catalog_finds_new_skills():
     assert "skin-photo-analysis" in names
     assert "nail-photo-analysis" in names
     assert "document-explainer" in names
+    assert "wound-photo-analysis" in names
+    assert "rash-photo-analysis" in names
+    assert "tick-bite-photo-analysis" in names
+    assert "medication-package-analysis" in names
+    assert "eye-throat-photo-analysis" in names
 
 
 def test_select_candidates_prefers_medical_for_image_prompt():
@@ -44,3 +49,33 @@ def test_select_candidates_prefers_document_explainer_for_letter():
     catalog = discover_catalog(SKILL_ROOTS)
     candidates = select_candidates("explain this doctor's letter", catalog, limit=5)
     assert any(record.name == "document-explainer" for record in candidates)
+
+
+def test_select_candidates_prefers_wound_for_cut_prompt():
+    catalog = discover_catalog(SKILL_ROOTS)
+    candidates = select_candidates("cut on my finger is not healing", catalog, limit=5)
+    assert any(record.name == "wound-photo-analysis" for record in candidates)
+
+
+def test_select_candidates_prefers_rash_for_itchy_red_prompt():
+    catalog = discover_catalog(SKILL_ROOTS)
+    candidates = select_candidates("itchy red rash on arm", catalog, limit=5)
+    assert any(record.name == "rash-photo-analysis" for record in candidates)
+
+
+def test_select_candidates_prefers_tick_bite_for_wandering_redness():
+    catalog = discover_catalog(SKILL_ROOTS)
+    candidates = select_candidates("tick bite with circular redness", catalog, limit=5)
+    assert any(record.name == "tick-bite-photo-analysis" for record in candidates)
+
+
+def test_select_candidates_prefers_medication_package_for_pill_box():
+    catalog = discover_catalog(SKILL_ROOTS)
+    candidates = select_candidates("explain this medication box", catalog, limit=5)
+    assert any(record.name == "medication-package-analysis" for record in candidates)
+
+
+def test_select_candidates_prefers_eye_throat_for_sore_throat():
+    catalog = discover_catalog(SKILL_ROOTS)
+    candidates = select_candidates("red sore throat photo", catalog, limit=5)
+    assert any(record.name == "eye-throat-photo-analysis" for record in candidates)

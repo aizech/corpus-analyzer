@@ -101,8 +101,11 @@ def _terms(text: str) -> set[str]:
 def _score(prompt: str, record: SkillRecord) -> int:
     prompt_terms = _terms(prompt)
     metadata_terms = _terms(f"{record.name} {record.description}")
+    # Tokens from the skill name help route short prompts like "rash on arm".
+    name_tokens = {t for t in record.name.casefold().split("-") if len(t) >= 3}
+    name_token_matches = len(prompt_terms & name_tokens)
     name_match = 5 if record.name.casefold() in prompt.casefold() else 0
-    return len(prompt_terms & metadata_terms) * 10 + name_match
+    return len(prompt_terms & metadata_terms) * 10 + name_token_matches * 5 + name_match
 
 
 def select_candidates(

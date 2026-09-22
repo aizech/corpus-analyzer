@@ -185,6 +185,8 @@ UI_TEXTS: Dict[str, Dict[str, str]] = {
         "en": "Could not save snapshot. Check the storage configuration.",
         "de": "Snapshot konnte nicht gespeichert werden. Prüfe die Speicher-Konfiguration.",
     },
+    # Photo quality
+    "photo_quality_title": {"en": "Photo quality tip", "de": "Foto-Qualitätshinweis"},
     # Progress view
     "progress_title": {"en": "Progress Tracking", "de": "Verlaufsverfolgung"},
     "progress_subtitle": {

@@ -14,6 +14,7 @@ from export import PDF_EXPORT_AVAILABLE, cached_markdown_report, cached_pdf_repo
 from image_loader import LoadedImage, load_camera_shot, load_images, resize_for_display
 from models import get_default_model_id
 from photo_privacy import blur_faces_and_tattoos, is_opencv_available, strip_exif
+from photo_quality import assess_image_quality, quality_warning_text
 from snapshot_builder import build_snapshot
 from storage.factory import get_storage_backend
 from translations import format_text
@@ -244,6 +245,24 @@ def _render_consent() -> bool:
 def _render_photo_guidance() -> None:
     """Display tips for taking useful smartphone health photos."""
     st.info(format_text("photo_tips"))
+
+
+def _render_quality_warnings(images: List[Dict[str, object]]) -> None:
+    """Show non-blocking quality hints for the first uploaded image."""
+    if not images:
+        return
+    first_bytes = images[0]["bytes"]
+    try:
+        image = PILImage.open(io.BytesIO(first_bytes))
+        quality = assess_image_quality(image)
+        warnings = quality["warnings"]
+        if warnings:
+            language = st.session_state.get("ui_language", "en")
+            warning_text = quality_warning_text(warnings, language=language)
+            st.info(f"{format_text('photo_quality_title')}: {warning_text}")
+    except Exception:
+        # Quality hints are best-effort; do not block analysis if they fail.
+        pass
 
 
 def _render_privacy_options() -> None:
@@ -673,6 +692,7 @@ def main() -> None:
 
     with controls_container:
         _render_image_gallery()
+        _render_quality_warnings(st.session_state.analysis_images)
 
         with st.expander(format_text("image_details"), expanded=False):
             for idx, loaded in enumerate(loaded_images):
