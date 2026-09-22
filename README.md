@@ -24,22 +24,23 @@ Help people understand what their medical images, body photos, and health docume
 |---|---|
 | Medical image analysis (X-ray, MRI, CT, ultrasound, DICOM) | ✅ |
 | Upload of standard image formats, including smartphone photos | ✅ |
-| Multiple images per session (different angles or mixed DICOM + photos) | 🚧 in evaluation |
-| Analysis quality for non-radiology photos (skin, nails, …) | 🚧 in evaluation |
+| Multiple images per session (different angles or mixed DICOM + photos) | ✅ |
+| Analysis quality for non-radiology photos (skin, nails, …) | ✅ |
 | Role-aware reports (Clinician / Patient / Researcher) | ✅ |
 | Quick prompts (radiology style, red flags, patient-friendly, online research, patient context) | ✅ |
 | Privacy-first consent before sending image data to an AI provider | ✅ |
 | Local DICOM anonymization | ✅ |
 | English / Deutsch response language | ✅ |
 | Markdown and PDF export | ✅ |
-| Guided photo capture with photo-quality tips | 🚧 |
-| Photo privacy: EXIF/GPS removal, face and tattoo masking | 🚧 |
-| Dedicated skills for skin, nail, and document photos | 🚧 |
-| Follow-up questions (onset, change, itching, bleeding, pain) | 🚧 |
-| Progress tracking over time (opt-in) | 🗓️ |
-| Body map for marking locations | 🗓️ |
-| Doctor handover export (images, history, timeline) | 🗓️ |
-| Document explainer (doctor's letter, lab report, medication box) | 🚧 |
+| Guided photo capture with photo-quality tips | ✅ |
+| Photo privacy: EXIF/GPS removal, face and tattoo masking | ✅ (masking requires optional opencv-python) |
+| Follow-up questions (onset, change, itching, bleeding, pain) | ✅ |
+| Dedicated skills for skin, nail, wound, rash, tick bite, eye/throat, document, and medication photos | ✅ |
+| Photo-quality hints (blur, brightness, contrast) | ✅ |
+| Progress tracking over time (opt-in) | � behind `ENABLE_PROGRESS_TRACKING` flag |
+| Body map for marking locations | � behind `ENABLE_PROGRESS_TRACKING` flag |
+| Doctor handover export (images, history, timeline) | � behind `ENABLE_PROGRESS_TRACKING` flag |
+| Encrypted SQLite snapshot storage | 🚧 behind `ENABLE_PROGRESS_TRACKING` flag |
 
 ---
 
