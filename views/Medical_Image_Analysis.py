@@ -7,6 +7,7 @@ from PIL import Image as PILImage
 
 from agents.medical_agent import create_medical_imaging_agent
 from analysis_format import confidence_level, parse_analysis_sections
+from analysis_prompt import build_analysis_prompt, build_anamnesis_text
 from export import PDF_EXPORT_AVAILABLE, cached_markdown_report, cached_pdf_report
 from image_loader import LoadedImage, load_camera_shot, load_images, resize_for_display
 from models import get_default_model_id
@@ -123,14 +124,10 @@ def _gallery_to_loaded_images() -> List[LoadedImage]:
     return loaded
 
 
-def _build_anamnesis_text() -> str:
-    """Build a short anamnesis paragraph from session state."""
+def _build_analysis_prompt(additional_info: str, role: str, language: str) -> str:
+    """Build the prompt sent to the medical imaging agent."""
     anamnesis = st.session_state.get("photo_anamnesis", {})
-    if not anamnesis:
-        return ""
-
-    parts: List[str] = []
-    mapping = {
+    translated_labels = {
         "since_when": format_text("anamnesis_since_when"),
         "has_changed": format_text("anamnesis_changed"),
         "itching": format_text("anamnesis_itching"),
@@ -139,61 +136,16 @@ def _build_anamnesis_text() -> str:
         "size_approx": format_text("anamnesis_size"),
         "additional_notes": format_text("anamnesis_notes"),
     }
-    for key, label in mapping.items():
-        value = anamnesis.get(key)
-        if value:
-            parts.append(f"- {label}: {value}")
-
-    if not parts:
-        return ""
-    return f"{format_text('anamnesis_label')}:\n" + "\n".join(parts)
-
-
-def _build_analysis_prompt(additional_info: str, role: str, language: str) -> str:
-    """Build the prompt sent to the medical imaging agent."""
-    role_instruction = {
-        "clinician": (
-            "You are writing for a qualified healthcare professional. "
-            "Use precise terminology, structured findings, and keep the tone concise and clinical."
-        ),
-        "patient": (
-            "You are explaining the results to a patient with no medical background. "
-            "Use plain language, avoid jargon, and focus on what the findings mean and what to do next."
-        ),
-        "researcher": (
-            "You are writing for a medical researcher. Include technical detail, differential considerations, "
-            "confidence discussion, and evidence-based references where possible."
-        ),
-    }.get(role, "")
-
-    language_instruction = {
-        "de": "Answer in German.",
-        "en": "Answer in English.",
-    }.get(language, "Answer in the language of the user; if not specified, answer in English.")
-
-    anamnesis_text = _build_anamnesis_text()
-
-    base_parts: List[str] = []
-    if additional_info:
-        base_parts.append(
-            "Analyze the provided image(s) considering the following context: " + additional_info
-        )
-    else:
-        base_parts.append("Analyze the provided image(s) and provide detailed findings.")
-
-    if anamnesis_text:
-        base_parts.append(anamnesis_text)
-
-    base = "\n\n".join(base_parts)
-
-    return (
-        f"Role: {role.capitalize()}\n\n"
-        f"{role_instruction}\n\n"
-        f"{base}\n\n"
-        "If you are not sure about what you see, please say so rather than guessing. "
-        "If the image quality or content is insufficient for assessment, state explicitly "
-        "that you cannot assess it and explain what is missing or how to improve the image(s). "
-        f"{language_instruction}"
+    anamnesis_text = build_anamnesis_text(
+        anamnesis,
+        label=format_text("anamnesis_label"),
+        labels=translated_labels,
+    )
+    return build_analysis_prompt(
+        additional_info=additional_info,
+        role=role,
+        language=language,
+        anamnesis_text=anamnesis_text,
     )
 
 
